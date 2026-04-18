@@ -1,0 +1,16 @@
+
+# Phase 0 additions
+.env
+.env.*
+!.env.example
+references/
+*.pdf
+__pycache__/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+node_modules/
+.next/
+dist/
+build/
+.DS_Store
