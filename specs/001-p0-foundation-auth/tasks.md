@@ -6,7 +6,7 @@ description: "Dependency-ordered, TDD-enforced tasks for P0 Foundation & Auth Fl
 
 **Feature Branch**: `001-p0-foundation-auth`
 **Input**: `specs/001-p0-foundation-auth/{plan,spec,data-model,research,quickstart}.md`, `contracts/openapi.yaml`
-**Constitution**: v0.1.0 — TDD (II), Scope Discipline (III), Privacy (IV), Auth Hardening (VIII), Config Externalization (XI) are binding.
+**Constitution**: v0.2.0 — TDD (II), Scope Discipline (III), Privacy (IV), Auth Hardening (VIII), Config Externalization (XI), Shadow-First (XIII), MEP over MVP (XIV) are binding.
 
 **TDD is mandatory.** Every `(a)` task below writes a FAILING test. No `(b)` implementation task may be committed until its paired `(a)` is red on CI. Commits land in the order listed so the failing→passing arc is reproducible from `git log`.
 
@@ -136,6 +136,18 @@ Parallel marker `[P]` = different files, no shared state with prior incomplete t
 
 ---
 
+## Phase 14 — MEP Hinges: Shadow-First + Feature Flags (Principles XIII, XIV) (T056–T060)
+
+**Intent**: P0 ships evolution-ready scaffolding — loader, table, ADR — with ZERO P1+ logic. Flags default OFF, `shadow_events` sits empty, no writers, no endpoints. Retrofitting these hinges in P1 would be a constitution violation (Principle XIV).
+
+- [ ] T056 Create `api/app/core/feature_flags.py` — pydantic-settings env-driven loader exposing a typed `FeatureFlags` model with three flags, all default OFF / 0: `shadow_mode_enabled: bool = False`, `agent_autonomy_level: int = 0`, `divergence_logging_enabled: bool = False`. Env prefix `FEATURE_` (e.g., `FEATURE_SHADOW_MODE_ENABLED=true`). Provide a `get_feature_flags()` cached accessor. NO call-sites in P0 code — loader + model only. **Acceptance**: module imports cleanly; `get_feature_flags()` returns all-OFF defaults with no env set; `grep -r "get_feature_flags\|FeatureFlags" api/app/routers api/app/services` returns nothing (Principle III: no check-sites wired yet).
+- [ ] T057 [P] **RED→GREEN** — `api/tests/unit/test_feature_flags.py`: (a) defaults all OFF with empty env; (b) `FEATURE_SHADOW_MODE_ENABLED=true` flips the bool; (c) `FEATURE_AGENT_AUTONOMY_LEVEL=2` parses as `int`, `FEATURE_AGENT_AUTONOMY_LEVEL=notanint` raises `ValidationError`; (d) unknown env keys like `FEATURE_BOGUS` are rejected via `model_config = SettingsConfigDict(extra="forbid")`. **Acceptance**: all four cases pass; test lands after T056.
+- [ ] T058 Create `api/alembic/versions/0002_shadow_events.py` — hand-written Alembic migration creating `shadow_events` table. Columns: `id UUID PK DEFAULT uuid4()` (app-side or `gen_random_uuid()`), `shift_id UUID NULL` (no FK in P0 — shifts entity lands P1+), `ho_user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE`, `event_type VARCHAR(50) NOT NULL`, `payload JSONB NOT NULL DEFAULT '{}'::jsonb` (de-identified — PHI redactor must run before any future writer; FR-008 contract extends here), `created_at TIMESTAMPTZ NOT NULL DEFAULT now()`, `divergence_score FLOAT NULL`. Index: `ix_shadow_events_ho_user_id_created_at` on `(ho_user_id, created_at DESC)`. Downgrade drops the index then the table. NO ORM model. NO router. NO service. Table is inert P0. **Acceptance**: `alembic upgrade head` creates the table; `psql -c '\d shadow_events'` matches schema; `grep -r "shadow_events" api/app/` returns only the migration file.
+- [ ] T059 [P] **RED→GREEN** — `api/tests/integration/test_shadow_events_migration.py`: (a) round-trip `alembic upgrade head && alembic downgrade -1 && alembic upgrade head` is clean; (b) using a raw SQLAlchemy `text()` INSERT against a fixture user, write one row with `event_type='agent_suggestion'`, `payload='{"note":"synthetic"}'::jsonb`, fetch it back, assert `id` is UUID, `created_at` is TIMESTAMPTZ in UTC, `divergence_score IS NULL`; (c) downgrade drops the table (`information_schema.tables` lookup returns zero rows). No ORM layer used — this test exercises schema only. **Acceptance**: all three cases pass; guarantees the MEP hinge is real, not cosmetic.
+- [ ] T060 Create `docs/adr/0001-shadow-first-deployment.md` recording the Shadow-First + MEP doctrine. Sections: **Context** (Principle XIII rationale — clinical agents cannot ship autonomous; Principle XIV — scaffolding must land in P0 or it never lands); **Decision** (every clinical agent feature runs in shadow mode; graduation requires a per-feature constitution amendment recording threshold, sample size, measured divergence); **Divergence Threshold** (PLACEHOLDER — TBD at P1 planning; expected form: "divergence_rate < X% over N real shifts"); **Graduation Process** (1. collect shadow telemetry in `shadow_events`; 2. analyze divergence per agent; 3. draft amendment PR citing data; 4. project-owner approval; 5. flip feature flag `agent_autonomy_level`); **P0 Artifacts** (this ADR, `feature_flags.py`, `shadow_events` migration); **References** (constitution Principles XIII + XIV; plan.md Constitution Check rows). **Acceptance**: file exists; `grep -q "Principle XIII" docs/adr/0001-shadow-first-deployment.md` and `grep -q "Principle XIV" docs/adr/0001-shadow-first-deployment.md` both succeed; TBD markers are explicitly labeled `TBD (P1)` not silently missing.
+
+---
+
 ## Dependency Graph (non-obvious callouts)
 
 - T007 (redactor) MUST land before T014 (app factory wires logging) — Principle IV commit-#1 rule.
@@ -162,10 +174,10 @@ Parallel marker `[P]` = different files, no shared state with prior incomplete t
 - **Story 2 (HO logs in)** → T024–T027 (JWT) + T032–T037 (login, lockout, rate-limit). Independently testable via `test_login*.py`.
 - **Story 3 (empty board shell)** → T044–T050. Independently testable via `smoke.spec.ts`; depends on Story 2 for token issuance.
 
-## Suggested MVP (if scope pressure forces a cut)
+## MEP Cutline (Principle XIV — not an MVP cut)
 
-Tasks T001–T043 constitute the backend floor + scope guard. T044–T050 (web shell) is still required for Story 3 / P0 Definition of Done: Inter self-hosting and dark-theme tokens must ship now to prevent design drift in P1.
+There is no "scope cut" option in P0. Principle XIV makes the MEP hinges (T056–T060) as load-bearing as the auth floor: retrofitting `feature_flags.py` or `shadow_events` in P1 is a constitution violation. Tasks T001–T043 are the backend floor + scope guard; T044–T050 (web shell) protect design-token parity for P1; T056–T060 protect evolvability. All three bands ship together or P0 is not done.
 
 ## Task Count
 
-**55 atomic tasks** across 13 phases. Each has a single concern, a file path, and an explicit acceptance criterion. The `(a) test → (b) code` TDD pairing holds for all 10 steps of `plan.md` §TDD Order.
+**60 atomic tasks** across 14 phases. Each has a single concern, a file path, and an explicit acceptance criterion. The `(a) test → (b) code` TDD pairing holds for all 10 steps of `plan.md` §TDD Order; Phase 14 adds MEP scaffolding per Principles XIII + XIV.
