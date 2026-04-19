@@ -21,3 +21,4 @@ __pycache__/
 # Personal tooling — not project code
 .obsidian/
 Welcome.md
+api/.venv/
