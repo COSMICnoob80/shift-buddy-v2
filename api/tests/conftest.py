@@ -10,6 +10,7 @@ import pytest_asyncio
 from fastapi import FastAPI
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
+from app.core.ratelimit import limiter
 from app.main import create_app
 from app.models.base import Base
 from app.models.db import get_session
@@ -28,6 +29,7 @@ async def app() -> AsyncIterator[FastAPI]:
 
     application = create_app()
     application.dependency_overrides[get_session] = _override
+    limiter.reset()
     yield application
     application.dependency_overrides.clear()
     await engine.dispose()

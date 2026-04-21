@@ -12,9 +12,11 @@ from __future__ import annotations
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
+from slowapi.errors import RateLimitExceeded
 
 from app.core.config import get_settings
 from app.core.logging import configure_logging
+from app.core.ratelimit import limiter
 from app.routers import auth as auth_router
 from app.routers import health as health_router
 
@@ -65,6 +67,12 @@ def create_app() -> FastAPI:
         docs_url="/docs",
         openapi_url="/openapi.json",
     )
+    app.state.limiter = limiter
+
+    @app.exception_handler(RateLimitExceeded)
+    async def _rate_limit_handler(_: Request, __: RateLimitExceeded) -> JSONResponse:
+        return _envelope_response(429, "rate_limited", "Too many requests. Slow down.")
+
     _install_exception_handlers(app)
 
     app.include_router(health_router.router, prefix=API_PREFIX)

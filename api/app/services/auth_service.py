@@ -110,7 +110,10 @@ async def login_user(session: AsyncSession, payload: LoginRequest) -> LoginResul
         raise AuthError(401, "invalid_credentials", "Invalid email or password.")
 
     now = _utcnow()
-    if user.locked_until is not None and user.locked_until > now:
+    locked_until = user.locked_until
+    if locked_until is not None and locked_until.tzinfo is None:
+        locked_until = locked_until.replace(tzinfo=UTC)
+    if locked_until is not None and locked_until > now:
         raise AuthError(401, "account_locked", "Account temporarily locked. Try again later.")
 
     password_ok = await asyncio.to_thread(verify_password, payload.password, user.password_hash)

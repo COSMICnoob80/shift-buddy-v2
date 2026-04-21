@@ -5,6 +5,7 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.ratelimit import LOGIN_RATE, limiter
 from app.models.db import get_session
 from app.schemas.auth import (
     LoginRequest,
@@ -40,13 +41,13 @@ async def register(
 
 
 @router.post("/login", response_model=LoginResponse)
+@limiter.limit(LOGIN_RATE)
 async def login(
-    payload: LoginRequest,
     request: Request,
+    payload: LoginRequest,
     session: AsyncSession = Depends(get_session),
 ) -> LoginResponse:
-    # Rate-limiting is installed at app-factory level via slowapi on this route.
-    _ = request
+    _ = request  # slowapi inspects via this param
     try:
         result = await login_user(session, payload)
     except AuthError as err:
