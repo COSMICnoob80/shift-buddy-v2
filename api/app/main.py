@@ -16,6 +16,7 @@ from slowapi.errors import RateLimitExceeded
 
 from app.core.config import get_settings
 from app.core.logging import configure_logging
+from app.core.middleware import BearerAuthMiddleware
 from app.core.ratelimit import limiter
 from app.routers import auth as auth_router
 from app.routers import health as health_router
@@ -74,6 +75,7 @@ def create_app() -> FastAPI:
         return _envelope_response(429, "rate_limited", "Too many requests. Slow down.")
 
     _install_exception_handlers(app)
+    app.add_middleware(BearerAuthMiddleware)
 
     app.include_router(health_router.router, prefix=API_PREFIX)
     app.include_router(auth_router.router, prefix=f"{API_PREFIX}/auth")
