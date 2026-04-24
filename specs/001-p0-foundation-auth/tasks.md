@@ -140,11 +140,11 @@ Parallel marker `[P]` = different files, no shared state with prior incomplete t
 
 ## Phase 13 — Compose, Quickstart, Final Gates (T051–T055)
 
-- [ ] T051 [P] `docker-compose.yml` at repo root: services `api`, `db` (postgres:16), `redis` (redis:7). `ollama` declared under profile `inference` (OFF by default — Principle V). **Acceptance**: `docker compose config` valid; `docker compose up -d db redis` works.
-- [ ] T052 [P] Verify `quickstart.md` steps end-to-end on a fresh clone: `cp .env.example .env` → `docker compose up -d db redis` → `alembic upgrade head` → `pytest` green → `uvicorn app.main:app` serves `/api/v1/health` 200 → `pnpm install && pnpm dev` → Playwright smoke green. **Acceptance**: quickstart.md updated with any drift; register→`/board` round-trip ≤ 60s (SC-001).
-- [ ] T053 [P] Secret-scan: `.pre-commit-config.yaml` with `gitleaks`; matching CI job in `ci.yml`. **Acceptance**: `pre-commit run --all-files` clean; a planted fake secret is blocked.
-- [ ] T054 Run the full Constitution Check from `plan.md` §Constitution Check; update any row that drifted. **Acceptance**: all 12 principles checked in the PR description with evidence links (test IDs, file paths).
-- [ ] T055 Confirm `plan.md` §Deliverables: all source present; `CLINICAL_SAFETY.md` banner correct; OpenAPI committed; 10-step TDD commit arc visible in `git log --oneline`; CI green including router gate (T042) and negative test (T043). **Acceptance**: branch is merge-ready into `dev`.
+- [X] T051 [P] `docker-compose.yml` at repo root: services `api`, `db` (postgres:16), `redis` (redis:7). `ollama` declared under profile `inference` (OFF by default — Principle V). **Acceptance**: `docker compose config` valid; `docker compose up -d db redis` works.
+- [X] T052 [P] Verify `quickstart.md` steps end-to-end on a fresh clone: `cp .env.example .env` → `docker compose up -d db redis` → `alembic upgrade head` → `pytest` green → `uvicorn app.main:app` serves `/api/v1/health` 200 → `pnpm install && pnpm dev` → Playwright smoke green. **Acceptance**: quickstart.md updated with any drift; register→`/board` round-trip ≤ 60s (SC-001).
+- [X] T053 [P] Secret-scan: `.pre-commit-config.yaml` with `gitleaks`; matching CI job in `ci.yml`. **Acceptance**: `pre-commit run --all-files` clean; a planted fake secret is blocked.
+- [X] T054 Run the full Constitution Check from `plan.md` §Constitution Check; update any row that drifted. **Acceptance**: all 12 principles checked in the PR description with evidence links (test IDs, file paths).
+- [X] T055 Confirm `plan.md` §Deliverables: all source present; `CLINICAL_SAFETY.md` banner correct; OpenAPI committed; 10-step TDD commit arc visible in `git log --oneline`; CI green including router gate (T042) and negative test (T043). **Acceptance**: branch is merge-ready into `dev`.
 
 ---
 

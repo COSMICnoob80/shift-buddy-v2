@@ -39,6 +39,20 @@ Phase 0 ships the minimum safe foundation: a FastAPI process with liveness `/hea
 
 No violations. Complexity Tracking table empty.
 
+**CP3 Re-verification (2026-04-24):** All 12 principles re-checked against CP3 deliverables:
+- I ✓ `CLINICAL_SAFETY.md` exists; zero clinical paths in routers.
+- II ✓ 10-step TDD arc in `git log --oneline`; failing tests precede all implementations.
+- III ✓ `bash scripts/ci/check_router_allowlist.sh` exits 0 on clean tree; `test_router_allowlist.py` 2/2 pass; `test_router_allowlist_negative.py` 3/3 pass.
+- IV ✓ `test_register_logs_redacted.py` passes; no googleapis ref in `web/src/`; JWT sub = UUID only (see `jwt_service.py:46`).
+- V ✓ `docker-compose.yml` Ollama under `profiles: [inference]` — OFF by default.
+- VI ✓ `tsc --noEmit` clean (4 routes); `mypy --strict` clean across all api modules.
+- VII ✓ Feature branch `001-p0-foundation-auth`; PR targets `dev`.
+- VIII ✓ bcrypt cost 12 (`password.py:_PWD_CTX`); 5/15 lockout (`test_login_lockout.py` 3/3 pass); slowapi 5/min (`test_login_rate_limit.py` passes).
+- IX ✓ N/A — no AI surfaces in P0.
+- X ✓ PHRs filed after every prompt (`history/prompts/001-p0-foundation-auth/`).
+- XI ✓ `clinical_config.py` loader only; zero threshold literals; `test_clinical_config.py` passes.
+- XII ✓ Breach list bundled at `api/app/data/breached_passwords.txt`; no runtime external calls.
+
 ## Project Structure
 
 ### Documentation (this feature)
