@@ -87,7 +87,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: bash scripts/ci/check_router_allowlist.sh || true  # shell lands in T042
+      - run: bash scripts/ci/check_router_allowlist.sh
 
   secret-scan:
     runs-on: ubuntu-latest

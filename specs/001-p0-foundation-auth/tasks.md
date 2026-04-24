@@ -121,7 +121,7 @@ Parallel marker `[P]` = different files, no shared state with prior incomplete t
 ## Phase 11 — Scope Guard CI (NFR-009 / SC-008, Principle III) (T041–T043)
 
 - [X] T041 **RED** — `api/tests/integration/test_router_allowlist.py`: mirror the CI grep in-process — walks `api/app/routers/` and asserts file set equals `{__init__.py, health.py, auth.py}`. **Acceptance**: passes now; serves as second gate.
-- [ ] T042 **GREEN** — `scripts/ci/check_router_allowlist.sh` per plan.md §CI Gates (find + fail on unknown file). `chmod +x`. Wire into `.github/workflows/ci.yml` `router-allowlist` job. **Acceptance**: CI job green on current branch.
+- [X] T042 **GREEN** — `scripts/ci/check_router_allowlist.sh` per plan.md §CI Gates (find + fail on unknown file). `chmod +x`. Wire into `.github/workflows/ci.yml` `router-allowlist` job. **Acceptance**: CI job green on current branch.
 - [ ] T043 **Negative CI test** — `api/tests/integration/test_router_allowlist_negative.py`: fixture creates `api/app/routers/_dummy.py` (cleanup on teardown), shells out to `scripts/ci/check_router_allowlist.sh`, asserts non-zero exit AND cleanup restores tree. **Acceptance**: proves the gate fails loud on scope creep.
 
 ---
