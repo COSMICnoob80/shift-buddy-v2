@@ -95,7 +95,7 @@ Parallel marker `[P]` = different files, no shared state with prior incomplete t
 - [X] T028 **RED** — `api/tests/contract/test_register.py`: all 5 Story-1 acceptance scenarios — happy 201 with JWT + bcrypt-hashed row; weak password 400; breached password 400; invalid PMDC 400; duplicate email OR PMDC 409 with generic `already_registered` message (assert message does NOT contain `"email"` or `"pmdc"`). **Acceptance**: fails until T030.
 - [X] T029 [P] **RED** — `api/tests/unit/test_register_schema.py`: Pydantic `RegisterRequest` trims whitespace in `name`, lowercases `email`, rejects `additionalProperties` (matches openapi.yaml). **Acceptance**: fails until T030.
 - [X] T030 **GREEN** — `api/app/schemas/{auth,errors}.py`, `api/app/services/auth_service.py::register`, `api/app/routers/auth.py::register`. Duplicate-collision path returns `409 already_registered` via a single catch on `IntegrityError` (no pre-check that would leak existence via timing). **Acceptance**: T028 + T029 pass.
-- [ ] T031 [P] `api/tests/integration/test_register_logs_redacted.py`: register a user, capture structlog output, assert no `name/email/pmdc/password` values appear — only `[REDACTED]` and the user UUID. **Acceptance**: passes — closes FR-008 loop for the register path.
+- [X] T031 [P] `api/tests/integration/test_register_logs_redacted.py`: register a user, capture structlog output, assert no `name/email/pmdc/password` values appear — only `[REDACTED]` and the user UUID. **Acceptance**: passes — closes FR-008 loop for the register path.
 
 ---
 

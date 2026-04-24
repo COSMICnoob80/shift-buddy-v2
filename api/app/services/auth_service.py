@@ -15,6 +15,8 @@ from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
+import structlog
+
 from app.core.logging import configure_logging
 from app.models.user import User, UserRole
 from app.schemas.auth import LoginRequest, RegisterRequest
@@ -30,6 +32,8 @@ from app.services.password import (
 
 # Ensure logging is configured as early as possible when the service is imported.
 configure_logging()
+
+_logger = structlog.get_logger(__name__)
 
 LOCKOUT_THRESHOLD: Final = 5
 LOCKOUT_DURATION = timedelta(minutes=15)
@@ -91,6 +95,19 @@ async def register_user(session: AsyncSession, payload: RegisterRequest) -> Regi
 
     await session.refresh(user)
     token = issue_token(user.id)
+
+    # NOTE: name/email/pmdc_number are passed deliberately — the RedactingProcessor
+    # (app.core.logging) MUST replace them with "[REDACTED]" before the line is
+    # rendered. Integration test `test_register_logs_redacted` enforces this.
+    _logger.info(
+        "user_registered",
+        user_id=str(user.id),
+        name=payload.name,
+        email=payload.email,
+        pmdc_number=payload.pmdc_number,
+        hospital_code=payload.hospital_code,
+    )
+
     return RegisterResult(user_id=str(user.id), token=token)
 
 
