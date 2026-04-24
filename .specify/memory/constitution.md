@@ -1,5 +1,34 @@
 <!--
-SYNC IMPACT REPORT
+SYNC IMPACT REPORT (v0.2.0)
+==================
+Version change: 0.1.0 → 0.2.0
+Bump rationale: MINOR — added two new principles (XIII. Shadow-First
+                Deployment, XIV. MEP over MVP). Pre-1.0 MINOR bumps are
+                treated as potentially breaking per governance policy;
+                amendment procedure followed.
+
+Added principles:
+  XIII. Shadow-First Deployment — agents observe/recommend only until
+        divergence vs. HO ground-truth falls below a pre-set threshold
+        over a pre-set number of real shifts; graduation per-feature
+        requires a constitution amendment.
+  XIV.  MEP over MVP — P0 deliverables ship evolution-ready: feature-
+        flag hinges, event-logging tables, and directory/interface
+        shapes that anticipate P1–P6 without implementing them.
+        Retrofitting is a violation.
+
+Templates alignment (v0.2.0 follow-ups):
+  ⚠ .specify/templates/plan-template.md — Constitution Check gate MUST
+    be extended to walk principles I–XIV.
+  ⚠ specs/001-p0-foundation-auth/tasks.md — append T056–T060 covering
+    `shadow_events` table scaffold, feature_flags loader, and an ADR
+    for the Shadow-First + MEP doctrine.
+  ✅ spec-template.md, phr-template.prompt.md — no mandated changes.
+
+Previous sync impact report (v0.1.0) preserved below for history.
+
+------------------------------------------------------------------
+SYNC IMPACT REPORT (v0.1.0)
 ==================
 Version change: 1.0.0 → 0.1.0
 Bump rationale: Re-ratification under pre-1.0 numbering. The project has not yet
@@ -141,6 +170,30 @@ Any feature that cannot degrade gracefully without internet is a bug. Core workf
 state. Cloud-only paths MUST surface a visible degraded-mode indicator and queue writes
 for later sync.
 
+### XIII. Shadow-First Deployment
+
+No clinical agent ships in autonomous mode. Every agent feature runs in shadow mode —
+observing state and recording recommendations — and MUST NOT take action on patient
+care until its divergence rate against House Officer (HO) ground-truth decisions falls
+below a pre-set threshold over a pre-set number of real shifts, both defined in the
+feature's plan.md. Graduation from shadow to autonomous is per-feature and REQUIRES
+an explicit constitution amendment recording the threshold, sample size, and measured
+divergence. Shadow-mode telemetry MUST be captured in a durable event log (see
+Principle XIV) from day one.
+
+### XIV. MEP over MVP
+
+Every P0 deliverable is a Minimum Evolvable Product, not a Minimum Viable Product.
+This means P0 MUST ship:
+  - feature-flag hinges for future capabilities (flags default OFF in P0, but the
+    wiring, loader, and check-sites exist);
+  - event-logging tables (e.g., `shadow_events`) for future divergence analysis,
+    created and migrated in P0 even if no rows are written yet;
+  - directory and interface shapes that anticipate P1–P6 surfaces (routers, agent
+    slots, config namespaces) without implementing their logic.
+Retrofitting these hinges in a later phase is a constitution violation. "We'll add
+the table later" is not an acceptable plan.md entry.
+
 ## Technology & Compliance Constraints
 
 - **Stack**: FastAPI (Python 3.12+, strict types) for API; Next.js 14+ (TS strict, App
@@ -192,7 +245,7 @@ is the authority on principles.
   clarifications and typos. Pre-1.0 versions (0.Y.Z) treat MINOR bumps as potentially
   breaking — changes still require the amendment procedure.
 - **Compliance review**: every `/sp.plan` run MUST include a Constitution Check
-  section walking principles I–XII and either confirming alignment or recording a
+  section walking principles I–XIV and either confirming alignment or recording a
   justified deviation in the Complexity Tracking table.
 - **Acceptance**: every principle in this document MUST be testable (via a CI check or
   automated test) or auditable (via a reviewable artifact such as a PR template entry,
@@ -200,7 +253,13 @@ is the authority on principles.
 
 ## Amendments
 
-_No amendments recorded. New entries MUST append below with: version, date,
-summary, and Sync Impact Report link._
+New entries MUST append below with: version, date, summary, and Sync Impact
+Report link (top-of-file header).
 
-**Version**: 0.1.0 | **Ratified**: 2026-04-18 | **Last Amended**: 2026-04-18
+- **v0.2.0 — 2026-04-19** — Added Principle XIII (Shadow-First Deployment) and
+  Principle XIV (MEP over MVP). Rationale: MEP + Shadow Mode are project
+  invariants, not framing language. Discovered during `/sp.tasks` review for
+  feature `001-p0-foundation-auth`. Sync Impact Report: see header block
+  "SYNC IMPACT REPORT (v0.2.0)" at top of this file.
+
+**Version**: 0.2.0 | **Ratified**: 2026-04-18 | **Last Amended**: 2026-04-19

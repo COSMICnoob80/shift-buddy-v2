@@ -1,0 +1,257 @@
+openapi: 3.1.0
+info:
+  title: Shift Buddy V2 — P0 Foundation & Auth API
+  version: 0.1.0
+  description: |
+    Phase 0 public API surface. Ships `/health`, `/auth/register`, `/auth/login` only.
+    Clinical endpoints are BLOCKED until Phase 1 (Principle III, Scope Discipline).
+    Every non-2xx response uses the locked error envelope `{ "error": "<code>", "message": "<human>" }` — never FastAPI's default `{ "detail": ... }` (NFR-003).
+
+servers:
+  - url: /api/v1
+    description: Versioned base path (same origin as web).
+
+security: []  # endpoints below are all public in P0; protected-route middleware is declared for future use.
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    ErrorEnvelope:
+      type: object
+      required: [error, message]
+      additionalProperties: false
+      properties:
+        error:
+          type: string
+          description: Machine-readable snake_case code.
+          enum:
+            - invalid_credentials
+            - weak_password
+            - breached_password
+            - invalid_pmdc
+            - invalid_email
+            - invalid_name
+            - invalid_hospital_code
+            - invalid_department
+            - already_registered
+            - unauthenticated
+            - token_expired
+            - account_locked
+            - rate_limited
+        message:
+          type: string
+          description: Human-readable message. MUST NOT disclose whether an email/PMDC exists.
+
+    HealthResponse:
+      type: object
+      required: [status, version]
+      additionalProperties: false
+      properties:
+        status:
+          type: string
+          enum: [alive]
+        version:
+          type: string
+          description: Semantic version of the running API.
+          example: "0.1.0"
+
+    RegisterRequest:
+      type: object
+      required: [name, email, password, pmdc_number, hospital_code, department]
+      additionalProperties: false
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+        email:
+          type: string
+          format: email
+          maxLength: 254
+        password:
+          type: string
+          minLength: 12
+          description: Must meet 3-of-4 class policy; top-10k breached list is rejected.
+          writeOnly: true
+        pmdc_number:
+          type: string
+          pattern: '^\d{4,6}-[A-Z]$'
+        hospital_code:
+          type: string
+          minLength: 1
+          maxLength: 20
+        department:
+          type: string
+          minLength: 1
+          maxLength: 100
+
+    RegisterResponse:
+      type: object
+      required: [id, token]
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+        token:
+          $ref: '#/components/schemas/JwtToken'
+
+    LoginRequest:
+      type: object
+      required: [email, password]
+      additionalProperties: false
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          writeOnly: true
+
+    LoginResponse:
+      type: object
+      required: [token, user]
+      additionalProperties: false
+      properties:
+        token:
+          $ref: '#/components/schemas/JwtToken'
+        user:
+          $ref: '#/components/schemas/UserPublic'
+
+    UserPublic:
+      type: object
+      required: [id, name, email, role, hospital_code, department]
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        role:
+          type: string
+          enum: [ho, senior_resident, consultant]
+        hospital_code:
+          type: string
+        department:
+          type: string
+
+    JwtToken:
+      type: string
+      description: |
+        HS256-signed JWT. Claims: `sub` = user UUID (never email/PMDC), `iat`/`exp` UTC epoch,
+        `exp = iat + 900` (15 min), `iss = "shift-buddy"`. No PHI/PII in claims (Principle IV).
+
+  responses:
+    InvalidCredentials:
+      description: Generic auth failure (unknown email OR wrong password — same message, same timing).
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+          example: { error: invalid_credentials, message: "Invalid email or password." }
+    AccountLocked:
+      description: 5 failed logins within 15 minutes — rejected for the rest of the window.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+          example: { error: account_locked, message: "Account temporarily locked. Try again later." }
+    RateLimited:
+      description: slowapi 5/min/IP on /auth/login.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+          example: { error: rate_limited, message: "Too many requests. Slow down." }
+    Unauthenticated:
+      description: Missing/malformed/expired/invalid bearer on protected routes (future).
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+
+paths:
+  /health:
+    get:
+      summary: Liveness probe
+      description: |
+        Returns 200 when the process is alive. Does NOT touch the database or any dependency
+        (P0 is liveness-only; readiness `/ready` is deferred to P1).
+      security: []
+      responses:
+        '200':
+          description: Process alive.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/HealthResponse' }
+              example: { status: alive, version: "0.1.0" }
+
+  /auth/register:
+    post:
+      summary: Register a new House Officer
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/RegisterRequest' }
+      responses:
+        '201':
+          description: User created; returns bearer token.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/RegisterResponse' }
+        '400':
+          description: Validation failure.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+              examples:
+                weak_password:    { value: { error: weak_password,    message: "Password does not meet policy." } }
+                breached_password:{ value: { error: breached_password,message: "Password appears in a known breach list." } }
+                invalid_pmdc:     { value: { error: invalid_pmdc,     message: "PMDC number format is invalid." } }
+                invalid_email:    { value: { error: invalid_email,    message: "Email address is invalid." } }
+                invalid_name:     { value: { error: invalid_name,     message: "Name is invalid." } }
+                invalid_hospital_code: { value: { error: invalid_hospital_code, message: "Hospital code is invalid." } }
+                invalid_department:    { value: { error: invalid_department,    message: "Department is invalid." } }
+        '409':
+          description: Email OR PMDC already registered. Message MUST NOT disclose which.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+              example: { error: already_registered, message: "Registration could not be completed." }
+
+  /auth/login:
+    post:
+      summary: Log a House Officer in
+      description: |
+        Rate-limited to 5/min/IP via slowapi. 5 failed attempts on a single account within 15
+        minutes lock the account for 15 minutes. All failures return `invalid_credentials` with
+        identical message and timing posture (Principle IV).
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/LoginRequest' }
+      responses:
+        '200':
+          description: Authenticated.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/LoginResponse' }
+        '401':
+          description: Auth failure or locked account.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+              examples:
+                invalid_credentials: { value: { error: invalid_credentials, message: "Invalid email or password." } }
+                account_locked:      { value: { error: account_locked,      message: "Account temporarily locked. Try again later." } }
+        '429':
+          $ref: '#/components/responses/RateLimited'

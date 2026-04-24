@@ -17,3 +17,9 @@ build/
 .env
 __pycache__/
 *.log
+
+# Personal tooling — not project code
+.obsidian/
+Welcome.md
+api/.venv/
+*.tsbuildinfo
