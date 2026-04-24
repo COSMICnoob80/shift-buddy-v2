@@ -132,9 +132,9 @@ Parallel marker `[P]` = different files, no shared state with prior incomplete t
 - [X] T045 [P] `web/src/app/globals.css`: emit ONLY the dark-theme CSS custom properties from spec §Design Tokens. No light tokens. **Acceptance**: file contains `--color-bg:#0a0a0f;` etc.; no `--color-*-light` tokens present.
 - [X] T046 [P] `web/src/lib/api.ts`: typed client with `register()`, `login()`, `health()` whose types mirror `contracts/openapi.yaml`. `web/src/lib/session.ts`: bearer storage (httpOnly-preferred; localStorage as P0 fallback, flagged TODO for P1). **Acceptance**: `tsc --noEmit` green; `grep -r "fetch(" web/src/app` returns nothing (pages use client only).
 - [X] T047 [P] `web/src/app/{register,login,board}/page.tsx` + `web/src/components/AppShell.tsx`. `/board` reads token via `session.ts`; if absent, `redirect('/login')`. No clinical calls. **Acceptance**: `pnpm build` green.
-- [ ] T048 **RED** — `web/tests/smoke.spec.ts` (Playwright): register → lands on `/board`; clear token → visiting `/board` redirects to `/login`; network panel shows zero requests to `fonts.googleapis.com` and at least one request to `/fonts/Inter-Regular.woff2`. **Acceptance**: fails until T044 + T047 land together.
-- [ ] T049 [P] `web/tests/error_envelope.spec.ts`: submit invalid login; assert UI surfaces `{error,message}` shape (not `{detail}`), generic message only. **Acceptance**: passes once T046 client + T034 backend are green.
-- [ ] T050 [P] `web/tests/a11y.spec.ts`: axe-core smoke on `/login`, `/register`, `/board` — no critical violations. **Acceptance**: passes; P0 minimum-viable a11y floor.
+- [X] T048 **RED** — `web/tests/smoke.spec.ts` (Playwright): register → lands on `/board`; clear token → visiting `/board` redirects to `/login`; network panel shows zero requests to `fonts.googleapis.com` and at least one request to `/fonts/Inter-Regular.woff2`. **Acceptance**: fails until T044 + T047 land together.
+- [X] T049 [P] `web/tests/error_envelope.spec.ts`: submit invalid login; assert UI surfaces `{error,message}` shape (not `{detail}`), generic message only. **Acceptance**: passes once T046 client + T034 backend are green.
+- [X] T050 [P] `web/tests/a11y.spec.ts`: axe-core smoke on `/login`, `/register`, `/board` — no critical violations. **Acceptance**: passes; P0 minimum-viable a11y floor.
 
 ---
 
