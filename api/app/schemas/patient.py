@@ -12,6 +12,9 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
+from app.schemas.labs import LabRead
+from app.schemas.vitals import VitalsRead
+
 
 # ── Enums (plain string literals validated by Pydantic) ──────────────────────
 
@@ -198,8 +201,8 @@ class PatientListResponse(BaseModel):
 # ── PatientDetailResponse ─────────────────────────────────────────────────────
 
 class PatientDetailResponse(PatientRead):
-    vitals: list[Any] = Field(default_factory=list)
-    labs: list[Any] = Field(default_factory=list)
+    vitals: list[VitalsRead] = Field(default_factory=list)
+    labs: list[LabRead] = Field(default_factory=list)
 
 
 # ── DischargeRequest / DischargeResponse ─────────────────────────────────────
