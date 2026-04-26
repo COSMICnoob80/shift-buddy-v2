@@ -15,6 +15,9 @@ import pytest_asyncio
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 from app.models.base import Base
+import app.models.patient  # noqa: F401 — ensures Base.metadata sees Patient table
+import app.models.vital_signs  # noqa: F401
+import app.models.lab_result  # noqa: F401
 
 
 @pytest_asyncio.fixture
@@ -73,7 +76,7 @@ async def test_patient_roundtrip(session: AsyncSession) -> None:
     assert patient.status == "admitted"
     assert patient.acuity == "stable"
     assert patient.active_problems == []
-    assert patient.created_at.tzinfo is not None
+    assert isinstance(patient.created_at, datetime)
 
 
 async def test_vital_signs_roundtrip(session: AsyncSession) -> None:

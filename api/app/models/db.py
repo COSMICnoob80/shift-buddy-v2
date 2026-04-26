@@ -13,6 +13,12 @@ from sqlalchemy.ext.asyncio import (
 
 from app.core.config import get_settings
 
+# Register all ORM models so Base.metadata is complete
+import app.models.user  # noqa: F401
+import app.models.patient  # noqa: F401
+import app.models.vital_signs  # noqa: F401
+import app.models.lab_result  # noqa: F401
+
 _engine: AsyncEngine | None = None
 _session_factory: async_sessionmaker[AsyncSession] | None = None
 
