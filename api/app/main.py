@@ -20,6 +20,9 @@ from app.core.middleware import BearerAuthMiddleware
 from app.core.ratelimit import limiter
 from app.routers import auth as auth_router
 from app.routers import health as health_router
+from app.routers import labs as labs_router
+from app.routers import patients as patients_router
+from app.routers import vitals as vitals_router
 
 API_PREFIX = "/api/v1"
 
@@ -79,6 +82,9 @@ def create_app() -> FastAPI:
 
     app.include_router(health_router.router, prefix=API_PREFIX)
     app.include_router(auth_router.router, prefix=f"{API_PREFIX}/auth")
+    app.include_router(patients_router.router, prefix=API_PREFIX)
+    app.include_router(vitals_router.router, prefix=f"{API_PREFIX}/patients")
+    app.include_router(labs_router.router, prefix=f"{API_PREFIX}/patients")
     return app
 
 
