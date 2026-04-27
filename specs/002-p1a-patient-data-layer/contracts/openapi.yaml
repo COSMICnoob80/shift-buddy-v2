@@ -1,0 +1,865 @@
+openapi: 3.1.0
+info:
+  title: Shift Buddy V2 — P1a Patient Data Layer
+  version: 0.1.0
+  description: |
+    REST API for Patient, VitalSigns, and LabResult entities.
+    All endpoints require Bearer JWT authentication.
+    PHI redaction is enforced server-side on all log output (Principle IV).
+
+servers:
+  - url: /api/v1
+
+security:
+  - bearerAuth: []
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+
+    # ── Shared ──────────────────────────────────────────────────────────────
+
+    ErrorEnvelope:
+      type: object
+      required: [error, message]
+      properties:
+        error:
+          type: string
+          description: Machine-readable error code
+          example: validation_error
+        message:
+          type: string
+          description: Human-readable description
+          example: "bed_number: field required"
+
+    PaginationMeta:
+      type: object
+      required: [page, limit, total_pages]
+      properties:
+        page:
+          type: integer
+          minimum: 1
+          example: 1
+        limit:
+          type: integer
+          minimum: 1
+          maximum: 100
+          example: 20
+        total_pages:
+          type: integer
+          minimum: 0
+          example: 3
+
+    # ── Medication (embedded) ────────────────────────────────────────────────
+
+    MedicationRoute:
+      type: string
+      enum: [iv, im, sc, po, pr, nebulized, topical, sublingual]
+
+    Medication:
+      type: object
+      required: [name, dose, route, frequency, start_date]
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+          example: "Inj. Pantoprazole"
+        dose:
+          type: string
+          minLength: 1
+          maxLength: 50
+          example: "40mg"
+        route:
+          $ref: '#/components/schemas/MedicationRoute'
+        frequency:
+          type: string
+          minLength: 1
+          maxLength: 20
+          example: "OD"
+        start_date:
+          type: string
+          format: date
+          example: "2026-01-28"
+        end_date:
+          type: string
+          format: date
+          nullable: true
+          example: null
+        notes:
+          type: string
+          nullable: true
+          example: null
+
+    # ── Patient ──────────────────────────────────────────────────────────────
+
+    PatientSex:
+      type: string
+      enum: [male, female]
+
+    PatientAcuity:
+      type: string
+      enum: [critical, urgent, stable, discharge_ready]
+
+    PatientWard:
+      type: string
+      enum: [ortho, surgical_itc, family, officer, child, emergency]
+
+    PatientStatus:
+      type: string
+      enum: [admitted, discharged, transferred, expired]
+
+    PatientCreate:
+      type: object
+      required:
+        - bed_number
+        - name
+        - age
+        - sex
+        - date_of_admission
+        - provisional_diagnosis
+        - acuity
+        - ward
+      properties:
+        bed_number:
+          type: string
+          minLength: 1
+          maxLength: 20
+          example: "3"
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+          example: "Cook Lateef"
+        age:
+          type: integer
+          minimum: 0
+          maximum: 150
+          example: 45
+        sex:
+          $ref: '#/components/schemas/PatientSex'
+        rank_title:
+          type: string
+          nullable: true
+          example: "Cook"
+        date_of_admission:
+          type: string
+          format: date
+          description: Cannot be a future date (FR-001a)
+          example: "2026-01-28"
+        provisional_diagnosis:
+          type: string
+          minLength: 1
+          maxLength: 500
+          example: "Right hypochondriac pain"
+        active_problems:
+          type: array
+          items:
+            type: string
+            maxLength: 200
+          maxItems: 20
+          default: []
+          example: ["Hepatic steatosis"]
+        current_medications:
+          type: array
+          items:
+            $ref: '#/components/schemas/Medication'
+          default: []
+        allergies:
+          type: array
+          items:
+            type: string
+          default: []
+          example: []
+        acuity:
+          $ref: '#/components/schemas/PatientAcuity'
+        ward:
+          $ref: '#/components/schemas/PatientWard'
+        assigned_ho:
+          type: string
+          format: uuid
+          nullable: true
+          description: Defaults to authenticated user UUID if omitted
+          example: null
+
+    PatientRead:
+      allOf:
+        - $ref: '#/components/schemas/PatientCreate'
+        - type: object
+          required: [id, status, created_by, created_at, updated_at]
+          properties:
+            id:
+              type: string
+              format: uuid
+              example: "550e8400-e29b-41d4-a716-446655440000"
+            status:
+              $ref: '#/components/schemas/PatientStatus'
+            discharged_at:
+              type: string
+              format: date-time
+              nullable: true
+              example: null
+            condition_at_discharge:
+              type: string
+              nullable: true
+              example: null
+            created_by:
+              type: string
+              format: uuid
+              example: "550e8400-e29b-41d4-a716-446655440001"
+            created_at:
+              type: string
+              format: date-time
+              example: "2026-01-28T08:00:00Z"
+            updated_at:
+              type: string
+              format: date-time
+              example: "2026-01-28T08:00:00Z"
+
+    PatientPatch:
+      type: object
+      description: Any subset of mutable PatientCreate fields. Empty body {} is valid.
+      properties:
+        bed_number:
+          type: string
+          minLength: 1
+          maxLength: 20
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+        age:
+          type: integer
+          minimum: 0
+          maximum: 150
+        sex:
+          $ref: '#/components/schemas/PatientSex'
+        rank_title:
+          type: string
+          nullable: true
+        date_of_admission:
+          type: string
+          format: date
+        provisional_diagnosis:
+          type: string
+          minLength: 1
+          maxLength: 500
+        active_problems:
+          type: array
+          items:
+            type: string
+        current_medications:
+          type: array
+          items:
+            $ref: '#/components/schemas/Medication'
+        allergies:
+          type: array
+          items:
+            type: string
+        acuity:
+          $ref: '#/components/schemas/PatientAcuity'
+        ward:
+          $ref: '#/components/schemas/PatientWard'
+        assigned_ho:
+          type: string
+          format: uuid
+
+    PatientSummary:
+      type: object
+      required: [total, critical, urgent, stable, discharge_ready]
+      properties:
+        total:
+          type: integer
+          minimum: 0
+        critical:
+          type: integer
+          minimum: 0
+        urgent:
+          type: integer
+          minimum: 0
+        stable:
+          type: integer
+          minimum: 0
+        discharge_ready:
+          type: integer
+          minimum: 0
+
+    PatientListResponse:
+      allOf:
+        - type: object
+          required: [patients, summary]
+          properties:
+            patients:
+              type: array
+              items:
+                $ref: '#/components/schemas/PatientRead'
+            summary:
+              $ref: '#/components/schemas/PatientSummary'
+        - $ref: '#/components/schemas/PaginationMeta'
+
+    PatientDetailResponse:
+      allOf:
+        - $ref: '#/components/schemas/PatientRead'
+        - type: object
+          required: [vitals, labs]
+          properties:
+            vitals:
+              type: array
+              items:
+                $ref: '#/components/schemas/VitalsRead'
+            labs:
+              type: array
+              items:
+                $ref: '#/components/schemas/LabRead'
+
+    DischargeRequest:
+      type: object
+      required: [condition_at_discharge]
+      properties:
+        condition_at_discharge:
+          type: string
+          minLength: 1
+          example: "Improved, tolerating orals"
+
+    DischargeResponse:
+      type: object
+      required: [status, discharged_at]
+      properties:
+        status:
+          type: string
+          enum: [discharged]
+        discharged_at:
+          type: string
+          format: date-time
+          example: "2026-04-26T10:30:00Z"
+
+    # ── VitalSigns ───────────────────────────────────────────────────────────
+
+    VitalsCreate:
+      type: object
+      description: At least one measurement field required.
+      properties:
+        heart_rate:
+          type: integer
+          minimum: 0
+          maximum: 300
+          nullable: true
+          example: 88
+        systolic_bp:
+          type: integer
+          minimum: 0
+          maximum: 300
+          nullable: true
+          example: 130
+        diastolic_bp:
+          type: integer
+          minimum: 0
+          maximum: 200
+          nullable: true
+          example: 80
+        temperature:
+          type: number
+          format: float
+          minimum: 30.0
+          maximum: 45.0
+          nullable: true
+          example: 37.2
+        spo2:
+          type: integer
+          minimum: 0
+          maximum: 100
+          nullable: true
+          example: 97
+        respiratory_rate:
+          type: integer
+          minimum: 0
+          maximum: 80
+          nullable: true
+          example: null
+        gcs:
+          type: integer
+          minimum: 3
+          maximum: 15
+          nullable: true
+          example: null
+        urine_output:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 5000
+          nullable: true
+          example: null
+        blood_sugar:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 1000
+          nullable: true
+          example: null
+        recorded_at:
+          type: string
+          format: date-time
+          description: UTC; must not be future (FR-012)
+          example: "2026-02-16T14:30:00Z"
+
+    VitalsRead:
+      allOf:
+        - $ref: '#/components/schemas/VitalsCreate'
+        - type: object
+          required: [id, patient_id, recorded_at]
+          properties:
+            id:
+              type: string
+              format: uuid
+            patient_id:
+              type: string
+              format: uuid
+
+    VitalsListResponse:
+      allOf:
+        - type: object
+          required: [vitals]
+          properties:
+            vitals:
+              type: array
+              items:
+                $ref: '#/components/schemas/VitalsRead'
+              description: Sorted ascending by recorded_at
+        - $ref: '#/components/schemas/PaginationMeta'
+
+    # ── LabResult ────────────────────────────────────────────────────────────
+
+    LabCreate:
+      type: object
+      required: [test_name, value, unit, recorded_at]
+      properties:
+        test_name:
+          type: string
+          minLength: 1
+          maxLength: 100
+          example: "K+"
+        value:
+          type: number
+          format: float
+          example: 6.2
+        unit:
+          type: string
+          minLength: 1
+          maxLength: 50
+          example: "mEq/L"
+        reference_low:
+          type: number
+          format: float
+          nullable: true
+          example: 3.5
+        reference_high:
+          type: number
+          format: float
+          nullable: true
+          example: 5.0
+        recorded_at:
+          type: string
+          format: date-time
+          example: "2026-02-16T15:00:00Z"
+
+    LabRead:
+      allOf:
+        - $ref: '#/components/schemas/LabCreate'
+        - type: object
+          required: [id, patient_id, is_critical]
+          properties:
+            id:
+              type: string
+              format: uuid
+            patient_id:
+              type: string
+              format: uuid
+            is_critical:
+              type: boolean
+              description: Server-computed. Client MUST NOT supply. (FR-015, FR-017a)
+              example: true
+
+    LabListResponse:
+      allOf:
+        - type: object
+          required: [labs]
+          properties:
+            labs:
+              type: array
+              items:
+                $ref: '#/components/schemas/LabRead'
+              description: Sorted ascending by recorded_at
+        - $ref: '#/components/schemas/PaginationMeta'
+
+# ── Paths ──────────────────────────────────────────────────────────────────
+
+paths:
+
+  /patients:
+    post:
+      operationId: createPatient
+      summary: Admit a new patient
+      tags: [patients]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatientCreate'
+      responses:
+        '201':
+          description: Patient admitted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PatientRead'
+        '400':
+          description: Validation error (missing required field, future date_of_admission, invalid enum)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+              examples:
+                missing_field:
+                  value: {error: validation_error, message: "bed_number: field required"}
+                future_admission:
+                  value: {error: validation_error, message: "date_of_admission: cannot be a future date"}
+        '401':
+          description: Missing or invalid Bearer token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+              example:
+                value: {error: unauthorized, message: "Bearer token required"}
+
+    get:
+      operationId: listPatients
+      summary: List patients with acuity summary
+      tags: [patients]
+      parameters:
+        - name: ward
+          in: query
+          schema:
+            $ref: '#/components/schemas/PatientWard'
+        - name: acuity
+          in: query
+          schema:
+            $ref: '#/components/schemas/PatientAcuity'
+        - name: assigned_ho
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: status
+          in: query
+          schema:
+            $ref: '#/components/schemas/PatientStatus'
+          description: Default admitted
+        - name: sort
+          in: query
+          schema:
+            type: string
+            enum: [acuity]
+          description: Default acuity (critical→urgent→stable→discharge_ready)
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+      responses:
+        '200':
+          description: Patient list with acuity summary. Returns [] and zero-counts when no records match (NFR-008).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PatientListResponse'
+        '400':
+          description: page=0 or limit>100
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+              example:
+                value: {error: validation_error, message: "limit: must be ≤ 100"}
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /patients/{patient_id}:
+    get:
+      operationId: getPatient
+      summary: Get patient with embedded vitals and labs
+      tags: [patients]
+      parameters:
+        - $ref: '#/components/parameters/PatientId'
+      responses:
+        '200':
+          description: Full patient object with all vitals and labs embedded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PatientDetailResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          description: Patient not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+              example:
+                value: {error: patient_not_found, message: "Patient not found"}
+
+    patch:
+      operationId: updatePatient
+      summary: Partial update a patient (empty body {} is valid)
+      tags: [patients]
+      parameters:
+        - $ref: '#/components/parameters/PatientId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatientPatch'
+      responses:
+        '200':
+          description: Updated patient object (updated_at refreshed)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PatientRead'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /patients/{patient_id}/discharge:
+    post:
+      operationId: dischargePatient
+      summary: Discharge a patient (soft state change)
+      tags: [patients]
+      parameters:
+        - $ref: '#/components/parameters/PatientId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DischargeRequest'
+      responses:
+        '200':
+          description: Patient discharged
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DischargeResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: Patient already discharged
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+              example:
+                value: {error: already_discharged, message: "Patient is already discharged"}
+
+  /patients/{patient_id}/vitals:
+    post:
+      operationId: addVitals
+      summary: Record a vitals observation (partial set allowed)
+      tags: [vitals]
+      parameters:
+        - $ref: '#/components/parameters/PatientId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VitalsCreate'
+      responses:
+        '201':
+          description: Vitals recorded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VitalsRead'
+        '400':
+          description: Future recorded_at, all-null measurement fields, or invalid values
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+              examples:
+                future_time:
+                  value: {error: validation_error, message: "recorded_at: cannot be a future timestamp"}
+                no_fields:
+                  value: {error: validation_error, message: "At least one measurement field required"}
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    get:
+      operationId: listVitals
+      summary: List vitals chronologically
+      tags: [vitals]
+      parameters:
+        - $ref: '#/components/parameters/PatientId'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: Vitals sorted ascending by recorded_at
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VitalsListResponse'
+        '400':
+          $ref: '#/components/responses/PaginationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /patients/{patient_id}/labs:
+    post:
+      operationId: addLab
+      summary: Add a lab result (is_critical auto-computed server-side)
+      tags: [labs]
+      parameters:
+        - $ref: '#/components/parameters/PatientId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LabCreate'
+      responses:
+        '201':
+          description: Lab recorded with server-computed is_critical
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LabRead'
+        '400':
+          description: Validation error or client supplied is_critical
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+              examples:
+                field_not_allowed:
+                  value: {error: field_not_allowed, message: "is_critical is server-computed and must not be supplied by client"}
+                missing_test_name:
+                  value: {error: validation_error, message: "test_name: field required"}
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    get:
+      operationId: listLabs
+      summary: List lab results (optional test_name filter)
+      tags: [labs]
+      parameters:
+        - $ref: '#/components/parameters/PatientId'
+        - name: test_name
+          in: query
+          schema:
+            type: string
+          description: Filter by test name (e.g. K+, Hb)
+          required: false
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: Labs sorted ascending by recorded_at
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LabListResponse'
+        '400':
+          $ref: '#/components/responses/PaginationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+# ── Shared Parameters & Responses ─────────────────────────────────────────
+
+  parameters:
+    PatientId:
+      name: patient_id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    Page:
+      name: page
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+    Limit:
+      name: limit
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+
+  responses:
+    Unauthorized:
+      description: Missing or invalid Bearer token
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+          example:
+            value: {error: unauthorized, message: "Bearer token required"}
+    NotFound:
+      description: Patient not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+          example:
+            value: {error: patient_not_found, message: "Patient not found"}
+    ValidationError:
+      description: Validation error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+          example:
+            value: {error: validation_error, message: "Field validation failed"}
+    PaginationError:
+      description: page=0 or limit>100
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+          example:
+            value: {error: validation_error, message: "limit: must be ≤ 100"}

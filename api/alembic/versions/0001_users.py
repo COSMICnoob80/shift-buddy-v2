@@ -13,6 +13,7 @@ and the unique index on ``pmdc_number``. Fully reversible.
 from __future__ import annotations
 
 import sqlalchemy as sa
+
 from alembic import op
 
 revision = "0001_users"
@@ -71,9 +72,7 @@ def upgrade() -> None:
         ),
     )
 
-    op.execute(
-        "CREATE UNIQUE INDEX ix_users_email_lower ON users (LOWER(email))"
-    )
+    op.execute("CREATE UNIQUE INDEX ix_users_email_lower ON users (LOWER(email))")
     op.create_index("ux_users_pmdc_number", "users", ["pmdc_number"], unique=True)
 
 

@@ -20,9 +20,9 @@ def test_reject_alg_none() -> None:
 
     header = _b64(json.dumps({"alg": "none", "typ": "JWT"}).encode("utf-8"))
     payload = _b64(
-        json.dumps(
-            {"sub": str(uuid.uuid4()), "iss": "shift-buddy", "iat": 0, "exp": 2**31}
-        ).encode("utf-8")
+        json.dumps({"sub": str(uuid.uuid4()), "iss": "shift-buddy", "iat": 0, "exp": 2**31}).encode(
+            "utf-8"
+        )
     )
     # Hand-crafted unsigned token — jose library refuses to emit one.
     token = f"{header}.{payload}."

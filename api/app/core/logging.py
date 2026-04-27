@@ -27,6 +27,7 @@ SENSITIVE_KEYS: frozenset[str] = frozenset(
         "password",
         "token",
         "authorization",
+        "bed_number",
     }
 )
 

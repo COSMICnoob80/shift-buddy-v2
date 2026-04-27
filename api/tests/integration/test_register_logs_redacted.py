@@ -29,12 +29,8 @@ async def test_register_redacts_phi_in_logs(
     messages = [rec.getMessage() for rec in caplog.records]
     combined = "\n".join(messages)
 
-    register_events = [
-        m for m in messages if '"user_registered"' in m and '"event"' in m
-    ]
-    assert register_events, (
-        f"expected a user_registered structlog event; captured: {messages!r}"
-    )
+    register_events = [m for m in messages if '"user_registered"' in m and '"event"' in m]
+    assert register_events, f"expected a user_registered structlog event; captured: {messages!r}"
 
     forbidden = {
         "name": valid_register_payload["name"],
