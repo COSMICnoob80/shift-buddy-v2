@@ -7,11 +7,10 @@ PATCH /patients/{id} (partial update, empty body), unauthenticated → 401.
 from __future__ import annotations
 
 import uuid
-from datetime import UTC, datetime, date
+from datetime import date
 
 import httpx
 import pytest
-
 
 # ── helpers ──────────────────────────────────────────────────────────────────
 
@@ -47,6 +46,7 @@ def _patient_payload(**overrides: object) -> dict[str, object]:
 
 
 # ── T078 tests ────────────────────────────────────────────────────────────────
+
 
 @pytest.mark.asyncio
 async def test_create_patient_returns_201(client: httpx.AsyncClient) -> None:
@@ -140,11 +140,8 @@ async def test_patch_patient_acuity(client: httpx.AsyncClient) -> None:
     r = await client.post("/api/v1/patients", json=_patient_payload(), headers=headers)
     assert r.status_code == 201
     pid = r.json()["id"]
-    old_updated = r.json()["updated_at"]
 
-    r2 = await client.patch(
-        f"/api/v1/patients/{pid}", json={"acuity": "urgent"}, headers=headers
-    )
+    r2 = await client.patch(f"/api/v1/patients/{pid}", json={"acuity": "urgent"}, headers=headers)
     assert r2.status_code == 200, r2.text
     body = r2.json()
     assert body["acuity"] == "urgent"

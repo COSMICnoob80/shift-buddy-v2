@@ -58,7 +58,7 @@ def _install_exception_handlers(app: FastAPI) -> None:
 
     @app.exception_handler(RequestValidationError)
     async def _validation_handler(_: Request, exc: RequestValidationError) -> JSONResponse:
-        return _envelope_response(422, "invalid_request", "Request validation failed.")
+        return _envelope_response(400, "validation_error", "Request validation failed.")
 
 
 def create_app() -> FastAPI:

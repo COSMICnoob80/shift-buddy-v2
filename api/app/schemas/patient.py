@@ -15,7 +15,6 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 from app.schemas.labs import LabRead
 from app.schemas.vitals import VitalsRead
 
-
 # ── Enums (plain string literals validated by Pydantic) ──────────────────────
 
 PATIENT_SEX = {"male", "female"}
@@ -37,6 +36,7 @@ def _validate_enum(v: str, allowed: set[str], field: str) -> str:
 
 # ── MedicationSchema ──────────────────────────────────────────────────────────
 
+
 class MedicationSchema(BaseModel):
     name: str = Field(min_length=1, max_length=100)
     dose: str = Field(min_length=1, max_length=50)
@@ -53,6 +53,7 @@ class MedicationSchema(BaseModel):
 
 
 # ── PatientCreate ─────────────────────────────────────────────────────────────
+
 
 class PatientCreate(BaseModel):
     model_config = ConfigDict(str_strip_whitespace=False)
@@ -113,6 +114,7 @@ class PatientCreate(BaseModel):
 
 # ── PatientRead ───────────────────────────────────────────────────────────────
 
+
 class PatientRead(PatientCreate):
     id: uuid.UUID
     status: str
@@ -131,6 +133,7 @@ class PatientRead(PatientCreate):
 
 
 # ── PatientPatch ──────────────────────────────────────────────────────────────
+
 
 class PatientPatch(BaseModel):
     model_config = ConfigDict(str_strip_whitespace=False)
@@ -180,6 +183,7 @@ class PatientPatch(BaseModel):
 
 # ── PatientSummary ────────────────────────────────────────────────────────────
 
+
 class PatientSummary(BaseModel):
     total: int = Field(ge=0)
     critical: int = Field(ge=0)
@@ -189,6 +193,7 @@ class PatientSummary(BaseModel):
 
 
 # ── PatientListResponse ───────────────────────────────────────────────────────
+
 
 class PatientListResponse(BaseModel):
     patients: list[PatientRead]
@@ -200,12 +205,14 @@ class PatientListResponse(BaseModel):
 
 # ── PatientDetailResponse ─────────────────────────────────────────────────────
 
+
 class PatientDetailResponse(PatientRead):
     vitals: list[VitalsRead] = Field(default_factory=list)
     labs: list[LabRead] = Field(default_factory=list)
 
 
 # ── DischargeRequest / DischargeResponse ─────────────────────────────────────
+
 
 class DischargeRequest(BaseModel):
     condition_at_discharge: str = Field(min_length=1)

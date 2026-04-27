@@ -8,16 +8,15 @@ from __future__ import annotations
 
 import uuid
 from collections.abc import AsyncIterator
-from datetime import UTC, datetime, date
+from datetime import UTC, date, datetime
 
-import pytest
 import pytest_asyncio
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
-from app.models.base import Base
+import app.models.lab_result  # noqa: F401
 import app.models.patient  # noqa: F401 — ensures Base.metadata sees Patient table
 import app.models.vital_signs  # noqa: F401
-import app.models.lab_result  # noqa: F401
+from app.models.base import Base
 
 
 @pytest_asyncio.fixture

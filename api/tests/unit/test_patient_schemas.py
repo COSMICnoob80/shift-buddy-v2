@@ -7,15 +7,15 @@ active_problems item length, and age range bounds.
 
 from __future__ import annotations
 
-from datetime import date, timedelta
+from datetime import UTC, date, timedelta
 
 import pytest
 
 
 def _today() -> date:
-    from datetime import timezone
     from datetime import datetime
-    return datetime.now(timezone.utc).date()
+
+    return datetime.now(UTC).date()
 
 
 def test_future_date_of_admission_rejected() -> None:

@@ -4,13 +4,14 @@ from __future__ import annotations
 
 import uuid
 from datetime import UTC, datetime
-from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 
 def _future_datetime_check(v: datetime) -> datetime:
-    if v > datetime.now(UTC):
+    now = datetime.now(UTC)
+    v_utc = v if v.tzinfo is not None else v.replace(tzinfo=UTC)
+    if v_utc > now:
         raise ValueError("recorded_at: cannot be a future timestamp")
     return v
 
@@ -50,10 +51,8 @@ class VitalsCreate(BaseModel):
         return _future_datetime_check(v)
 
     @model_validator(mode="after")
-    def _require_at_least_one_measurement(self) -> "VitalsCreate":
-        has_any = any(
-            getattr(self, field) is not None for field in _MEASUREMENT_FIELDS
-        )
+    def _require_at_least_one_measurement(self) -> VitalsCreate:
+        has_any = any(getattr(self, field) is not None for field in _MEASUREMENT_FIELDS)
         if not has_any:
             raise ValueError("At least one measurement field required")
         return self

@@ -6,9 +6,9 @@ import os
 import re
 from logging.config import fileConfig
 
-from alembic import context
 from sqlalchemy import engine_from_config, pool
 
+from alembic import context
 from app.models.base import Base
 from app.models.user import User  # noqa: F401  (register model for metadata)
 

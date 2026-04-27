@@ -7,7 +7,6 @@ from datetime import date, datetime
 from typing import Any
 
 from sqlalchemy import (
-    Boolean,
     CheckConstraint,
     Date,
     DateTime,
@@ -64,15 +63,11 @@ class Patient(Base):
     __table_args__ = (
         CheckConstraint("length(bed_number) >= 1", name="ck_patients_bed_number_len"),
         CheckConstraint("length(name) >= 1", name="ck_patients_name_len"),
-        CheckConstraint(
-            "length(provisional_diagnosis) >= 1", name="ck_patients_diag_len"
-        ),
+        CheckConstraint("length(provisional_diagnosis) >= 1", name="ck_patients_diag_len"),
         CheckConstraint("age BETWEEN 0 AND 150", name="ck_patients_age"),
     )
 
-    id: Mapped[uuid.UUID] = mapped_column(
-        _UUIDString(), primary_key=True, default=uuid.uuid4
-    )
+    id: Mapped[uuid.UUID] = mapped_column(_UUIDString(), primary_key=True, default=uuid.uuid4)
     bed_number: Mapped[str] = mapped_column(String(20), nullable=False)
     name: Mapped[str] = mapped_column(String(100), nullable=False)
     age: Mapped[int] = mapped_column(Integer, nullable=False)
@@ -86,9 +81,7 @@ class Patient(Base):
     current_medications: Mapped[list[Any]] = mapped_column(
         _PortableJSON(), nullable=False, default=list
     )
-    allergies: Mapped[list[Any]] = mapped_column(
-        _PortableJSON(), nullable=False, default=list
-    )
+    allergies: Mapped[list[Any]] = mapped_column(_PortableJSON(), nullable=False, default=list)
     acuity: Mapped[str] = mapped_column(String(20), nullable=False, default="stable")
     ward: Mapped[str] = mapped_column(String(30), nullable=False)
     assigned_ho: Mapped[uuid.UUID] = mapped_column(
@@ -97,9 +90,7 @@ class Patient(Base):
         nullable=False,
     )
     status: Mapped[str] = mapped_column(String(20), nullable=False, default="admitted")
-    discharged_at: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True), nullable=True
-    )
+    discharged_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     condition_at_discharge: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_by: Mapped[uuid.UUID] = mapped_column(
         _UUIDString(),

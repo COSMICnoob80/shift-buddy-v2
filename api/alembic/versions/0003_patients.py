@@ -12,8 +12,9 @@ table with all columns per data-model.md §Entity: Patient. Full downgrade.
 from __future__ import annotations
 
 import sqlalchemy as sa
-from alembic import op
 from sqlalchemy.dialects import postgresql
+
+from alembic import op
 
 revision = "0003_patients"
 down_revision = "0002_shadow_events"
@@ -24,16 +25,21 @@ depends_on = None
 def upgrade() -> None:
     # ── Enum types ─────────────────────────────────────────────────────────────
     sa.Enum("male", "female", name="patient_sex").create(op.get_bind(), checkfirst=False)
+    sa.Enum("critical", "urgent", "stable", "discharge_ready", name="patient_acuity").create(
+        op.get_bind(), checkfirst=False
+    )
     sa.Enum(
-        "critical", "urgent", "stable", "discharge_ready", name="patient_acuity"
-    ).create(op.get_bind(), checkfirst=False)
-    sa.Enum(
-        "ortho", "surgical_itc", "family", "officer", "child", "emergency",
+        "ortho",
+        "surgical_itc",
+        "family",
+        "officer",
+        "child",
+        "emergency",
         name="patient_ward",
     ).create(op.get_bind(), checkfirst=False)
-    sa.Enum(
-        "admitted", "discharged", "transferred", "expired", name="patient_status"
-    ).create(op.get_bind(), checkfirst=False)
+    sa.Enum("admitted", "discharged", "transferred", "expired", name="patient_status").create(
+        op.get_bind(), checkfirst=False
+    )
 
     # ── patients table ─────────────────────────────────────────────────────────
     op.create_table(
@@ -139,26 +145,17 @@ def upgrade() -> None:
         ),
         sa.CheckConstraint("length(bed_number) >= 1", name="ck_patients_bed_number_len"),
         sa.CheckConstraint("length(name) >= 1", name="ck_patients_name_len"),
-        sa.CheckConstraint(
-            "length(provisional_diagnosis) >= 1", name="ck_patients_diag_len"
-        ),
-        sa.CheckConstraint(
-            "date_of_admission <= CURRENT_DATE", name="ck_patients_admission_date"
-        ),
+        sa.CheckConstraint("length(provisional_diagnosis) >= 1", name="ck_patients_diag_len"),
+        sa.CheckConstraint("date_of_admission <= CURRENT_DATE", name="ck_patients_admission_date"),
     )
 
     # ── Indexes (partial WHERE status='admitted' for ward/acuity queries) ──────
-    op.execute(
-        "CREATE INDEX ix_patients_ward ON patients (ward) WHERE status = 'admitted'"
-    )
-    op.execute(
-        "CREATE INDEX ix_patients_acuity ON patients (acuity) WHERE status = 'admitted'"
-    )
+    op.execute("CREATE INDEX ix_patients_ward ON patients (ward) WHERE status = 'admitted'")
+    op.execute("CREATE INDEX ix_patients_acuity ON patients (acuity) WHERE status = 'admitted'")
     op.create_index("ix_patients_assigned_ho", "patients", ["assigned_ho"])
     op.create_index("ix_patients_status", "patients", ["status"])
     op.execute(
-        "CREATE INDEX ix_patients_ward_acuity ON patients (ward, acuity) "
-        "WHERE status = 'admitted'"
+        "CREATE INDEX ix_patients_ward_acuity ON patients (ward, acuity) WHERE status = 'admitted'"
     )
 
 

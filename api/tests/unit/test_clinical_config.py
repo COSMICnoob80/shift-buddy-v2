@@ -68,6 +68,5 @@ def test_no_protocol_code_in_loader() -> None:
     banned = (" > ", " < ", " >= ", " <= ")
     for token in banned:
         assert token not in source, (
-            f"clinical_config.py must contain zero threshold comparisons, "
-            f"found: {token!r}"
+            f"clinical_config.py must contain zero threshold comparisons, found: {token!r}"
         )

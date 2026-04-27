@@ -6,9 +6,7 @@ import httpx
 import pytest
 
 
-async def _register(
-    client: httpx.AsyncClient, payload: dict[str, str]
-) -> None:
+async def _register(client: httpx.AsyncClient, payload: dict[str, str]) -> None:
     r = await client.post("/api/v1/auth/register", json=payload)
     assert r.status_code == 201
 

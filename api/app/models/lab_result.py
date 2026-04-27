@@ -20,9 +20,7 @@ class LabResult(Base):
         CheckConstraint("length(unit) >= 1", name="ck_lab_results_unit_len"),
     )
 
-    id: Mapped[uuid.UUID] = mapped_column(
-        _UUIDString(), primary_key=True, default=uuid.uuid4
-    )
+    id: Mapped[uuid.UUID] = mapped_column(_UUIDString(), primary_key=True, default=uuid.uuid4)
     patient_id: Mapped[uuid.UUID] = mapped_column(
         _UUIDString(),
         ForeignKey("patients.id", ondelete="CASCADE"),

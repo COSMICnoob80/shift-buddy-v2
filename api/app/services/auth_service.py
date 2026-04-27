@@ -11,11 +11,10 @@ from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from typing import Final
 
+import structlog
 from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
-
-import structlog
 
 from app.core.logging import configure_logging
 from app.models.user import User, UserRole
@@ -89,9 +88,7 @@ async def register_user(session: AsyncSession, payload: RegisterRequest) -> Regi
     except IntegrityError as exc:
         await session.rollback()
         # Generic 409 — MUST NOT disclose which field collided (Story 1 AC5).
-        raise AuthError(
-            409, "already_registered", "Registration could not be completed."
-        ) from exc
+        raise AuthError(409, "already_registered", "Registration could not be completed.") from exc
 
     await session.refresh(user)
     token = issue_token(user.id)

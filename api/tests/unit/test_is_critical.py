@@ -11,8 +11,8 @@ from __future__ import annotations
 
 import pytest
 
-
 # ── helpers ──────────────────────────────────────────────────────────────────
+
 
 def _set_k_env(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("CLINICAL_HR_MIN", "40")
@@ -31,6 +31,7 @@ def _set_k_env(monkeypatch: pytest.MonkeyPatch) -> None:
 
 
 # ── T061 threshold tests ──────────────────────────────────────────────────────
+
 
 def test_k_threshold_defaults(monkeypatch: pytest.MonkeyPatch) -> None:
     from app.core.clinical_config import get_clinical_config, get_lab_thresholds
@@ -74,6 +75,7 @@ def test_non_numeric_k_critical_high_rejected(monkeypatch: pytest.MonkeyPatch) -
 
 
 # ── T063 boundary tests (added after compute_is_critical exists) ──────────────
+
 
 def test_k_low_boundary_below(monkeypatch: pytest.MonkeyPatch) -> None:
     from app.core.clinical_config import get_clinical_config

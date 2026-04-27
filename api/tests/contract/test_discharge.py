@@ -12,7 +12,6 @@ from datetime import date
 import httpx
 import pytest
 
-
 # ── helpers ──────────────────────────────────────────────────────────────────
 
 _REG_PAYLOAD = {
@@ -45,6 +44,7 @@ def _patient_payload() -> dict[str, object]:
 
 
 # ── T079 tests ────────────────────────────────────────────────────────────────
+
 
 @pytest.mark.asyncio
 async def test_discharge_returns_200_with_status_and_timestamp(

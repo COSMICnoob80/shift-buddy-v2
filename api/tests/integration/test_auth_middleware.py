@@ -68,8 +68,6 @@ async def test_valid_token_allows_request(app: FastAPI, client: httpx.AsyncClien
 
 
 @pytest.mark.asyncio
-async def test_public_paths_do_not_require_token(
-    app: FastAPI, client: httpx.AsyncClient
-) -> None:
+async def test_public_paths_do_not_require_token(app: FastAPI, client: httpx.AsyncClient) -> None:
     r = await client.get("/api/v1/health")
     assert r.status_code == 200

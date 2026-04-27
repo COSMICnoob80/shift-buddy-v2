@@ -12,8 +12,9 @@ measurement columns with CHECK constraints per data-model.md §Entity: VitalSign
 from __future__ import annotations
 
 import sqlalchemy as sa
-from alembic import op
 from sqlalchemy.dialects import postgresql
+
+from alembic import op
 
 revision = "0004_vital_signs"
 down_revision = "0003_patients"
@@ -34,9 +35,7 @@ def upgrade() -> None:
         sa.Column(
             "patient_id",
             postgresql.UUID(as_uuid=True),
-            sa.ForeignKey(
-                "patients.id", ondelete="CASCADE", name="fk_vital_signs_patient_id"
-            ),
+            sa.ForeignKey("patients.id", ondelete="CASCADE", name="fk_vital_signs_patient_id"),
             nullable=False,
         ),
         sa.Column("recorded_at", sa.DateTime(timezone=True), nullable=False),

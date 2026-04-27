@@ -8,7 +8,7 @@ from datetime import datetime
 from sqlalchemy import CheckConstraint, DateTime, ForeignKey, Integer, Numeric
 from sqlalchemy.orm import Mapped, mapped_column
 
-from app.models.base import Base, _utcnow
+from app.models.base import Base
 from app.models.user import _UUIDString
 
 
@@ -54,9 +54,7 @@ class VitalSigns(Base):
         ),
     )
 
-    id: Mapped[uuid.UUID] = mapped_column(
-        _UUIDString(), primary_key=True, default=uuid.uuid4
-    )
+    id: Mapped[uuid.UUID] = mapped_column(_UUIDString(), primary_key=True, default=uuid.uuid4)
     patient_id: Mapped[uuid.UUID] = mapped_column(
         _UUIDString(),
         ForeignKey("patients.id", ondelete="CASCADE"),
@@ -66,15 +64,9 @@ class VitalSigns(Base):
     heart_rate: Mapped[int | None] = mapped_column(Integer, nullable=True)
     systolic_bp: Mapped[int | None] = mapped_column(Integer, nullable=True)
     diastolic_bp: Mapped[int | None] = mapped_column(Integer, nullable=True)
-    temperature: Mapped[float | None] = mapped_column(
-        Numeric(precision=4, scale=1), nullable=True
-    )
+    temperature: Mapped[float | None] = mapped_column(Numeric(precision=4, scale=1), nullable=True)
     spo2: Mapped[int | None] = mapped_column(Integer, nullable=True)
     respiratory_rate: Mapped[int | None] = mapped_column(Integer, nullable=True)
     gcs: Mapped[int | None] = mapped_column(Integer, nullable=True)
-    urine_output: Mapped[float | None] = mapped_column(
-        Numeric(precision=7, scale=1), nullable=True
-    )
-    blood_sugar: Mapped[float | None] = mapped_column(
-        Numeric(precision=6, scale=1), nullable=True
-    )
+    urine_output: Mapped[float | None] = mapped_column(Numeric(precision=7, scale=1), nullable=True)
+    blood_sugar: Mapped[float | None] = mapped_column(Numeric(precision=6, scale=1), nullable=True)
