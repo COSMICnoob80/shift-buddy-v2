@@ -1,4 +1,9 @@
-"""Labs router (P1a T086) — POST and GET lab results."""
+"""Labs router (P1a T086 / P1b T109) — POST and GET lab results.
+
+POST /labs uses create_lab_with_alerts coordinator (P1b) so that
+alert records are created atomically in the same transaction.
+The P1a create_lab function remains unchanged (used by other callers).
+"""
 
 from __future__ import annotations
 
@@ -9,7 +14,7 @@ from app.core.pagination import PaginationParams
 from app.models.db import get_session
 from app.models.patient import Patient
 from app.schemas.labs import LabCreate, LabListResponse, LabRead
-from app.services import lab_service, patient_service
+from app.services import alert_service, lab_service, patient_service
 
 router = APIRouter(tags=["labs"])
 
@@ -20,7 +25,7 @@ async def add_lab(
     patient: Patient = Depends(patient_service.get_patient_or_404),
     db: AsyncSession = Depends(get_session),
 ) -> LabRead:
-    return await lab_service.create_lab(patient.id, payload, db)
+    return await alert_service.create_lab_with_alerts(patient.id, payload, db)
 
 
 @router.get("/{patient_id}/labs", response_model=LabListResponse)

@@ -1,4 +1,9 @@
-"""Vitals router (P1a T084) — POST and GET vital signs."""
+"""Vitals router (P1a T084 / P1b T109) — POST and GET vital signs.
+
+POST /vitals uses create_vitals_with_alerts coordinator (P1b) so that
+alert records are created atomically in the same transaction.
+The P1a create_vitals function remains unchanged (used by other callers).
+"""
 
 from __future__ import annotations
 
@@ -9,7 +14,7 @@ from app.core.pagination import PaginationParams
 from app.models.db import get_session
 from app.models.patient import Patient
 from app.schemas.vitals import VitalsCreate, VitalsListResponse, VitalsRead
-from app.services import patient_service, vitals_service
+from app.services import alert_service, patient_service, vitals_service
 
 router = APIRouter(tags=["vitals"])
 
@@ -20,7 +25,7 @@ async def add_vitals(
     patient: Patient = Depends(patient_service.get_patient_or_404),
     db: AsyncSession = Depends(get_session),
 ) -> VitalsRead:
-    return await vitals_service.create_vitals(patient.id, payload, db)
+    return await alert_service.create_vitals_with_alerts(patient.id, payload, db)
 
 
 @router.get("/{patient_id}/vitals", response_model=VitalsListResponse)
