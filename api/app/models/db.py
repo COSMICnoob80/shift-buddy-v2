@@ -11,6 +11,7 @@ from sqlalchemy.ext.asyncio import (
     create_async_engine,
 )
 
+import app.models.alert  # noqa: F401
 import app.models.lab_result  # noqa: F401
 import app.models.patient  # noqa: F401
 
