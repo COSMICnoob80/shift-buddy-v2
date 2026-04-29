@@ -18,7 +18,8 @@ from app.core.config import get_settings
 from app.core.logging import configure_logging
 from app.core.middleware import BearerAuthMiddleware
 from app.core.ratelimit import limiter
-from app.routers import alerts as alerts_router
+from app.routers import alerts as alerts_module
+from app.routers.alerts import alerts_acknowledge_router
 from app.routers import auth as auth_router
 from app.routers import health as health_router
 from app.routers import labs as labs_router
@@ -87,7 +88,10 @@ def create_app() -> FastAPI:
     app.include_router(patients_router.router, prefix=API_PREFIX)
     app.include_router(vitals_router.router, prefix=f"{API_PREFIX}/patients")
     app.include_router(labs_router.router, prefix=f"{API_PREFIX}/patients")
-    app.include_router(alerts_router.router, prefix=API_PREFIX)
+    # GET /patients/{id}/alerts lives under /patients prefix (same as vitals/labs)
+    app.include_router(alerts_module.router, prefix=f"{API_PREFIX}/patients")
+    # POST /alerts/{id}/acknowledge lives under /api/v1
+    app.include_router(alerts_acknowledge_router, prefix=API_PREFIX)
     app.include_router(protocols_router.router, prefix=API_PREFIX)
     return app
 
