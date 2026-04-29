@@ -44,7 +44,6 @@ def test_get_vital_thresholds_heart_rate_not_none() -> None:
 
 def _make_vitals(**kwargs: object) -> object:
     """Build a minimal VitalSigns-like namespace with recorded_at and the given fields."""
-    from app.models.vital_signs import VitalSigns
 
     now = datetime.now(UTC)
     defaults: dict[str, object] = {
@@ -101,6 +100,7 @@ def _make_lab(
 
 def test_build_lab_alert_k_critical_returns_alert_with_protocol_link() -> None:
     from app.core.clinical_config import get_clinical_config as _gcfg
+
     _gcfg.cache_clear()  # type: ignore[attr-defined]
     from app.core.clinical_config import get_clinical_config
     from app.services.alert_service import build_lab_alert
@@ -147,13 +147,13 @@ def test_build_lab_alert_troponin_critical_no_protocol_link() -> None:
 @pytest.mark.parametrize(
     "field,value,expected_type,expected_count",
     [
-        ("heart_rate", 135, "critical", 1),   # above hr_max (130 test default → 160 P0 default)
-        ("heart_rate", 55, "warning", 1),      # below vital_hr_warn_low=50 … above hr_min=40
-        ("heart_rate", 80, None, 0),           # normal range
-        ("spo2", 91, "warning", 1),            # below vital_spo2_warn_low=94
-        ("spo2", 89, "critical", 1),           # below vital_spo2_crit_low=90
+        ("heart_rate", 135, "critical", 1),  # above hr_max (130 test default → 160 P0 default)
+        ("heart_rate", 55, "warning", 1),  # below vital_hr_warn_low=50 … above hr_min=40
+        ("heart_rate", 80, None, 0),  # normal range
+        ("spo2", 91, "warning", 1),  # below vital_spo2_warn_low=94
+        ("spo2", 89, "critical", 1),  # below vital_spo2_crit_low=90
         ("temperature", 39.6, "critical", 1),  # above vital_temp_crit_high=39.5
-        ("systolic_bp", 181, "critical", 1),   # above vital_sbp_crit_high=180
+        ("systolic_bp", 181, "critical", 1),  # above vital_sbp_crit_high=180
     ],
 )
 def test_evaluate_vital_thresholds_boundary(
@@ -162,10 +162,10 @@ def test_evaluate_vital_thresholds_boundary(
     expected_type: str | None,
     expected_count: int,
 ) -> None:
-    from app.services.alert_service import evaluate_vital_thresholds
-
     from app.core.clinical_config import get_clinical_config
     from app.core.clinical_config import get_clinical_config as _gcfg
+    from app.services.alert_service import evaluate_vital_thresholds
+
     _gcfg.cache_clear()  # type: ignore[attr-defined]
 
     config = get_clinical_config()
@@ -177,6 +177,5 @@ def test_evaluate_vital_thresholds_boundary(
     )
     if expected_type is not None:
         assert results[0].alert_type == expected_type, (
-            f"{field}={value}: expected alert_type={expected_type!r}, "
-            f"got {results[0].alert_type!r}"
+            f"{field}={value}: expected alert_type={expected_type!r}, got {results[0].alert_type!r}"
         )

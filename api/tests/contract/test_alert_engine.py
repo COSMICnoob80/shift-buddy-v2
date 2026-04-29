@@ -7,14 +7,12 @@ POST /vitals normal → no new alerts; rollback test (DB error during alert inse
 
 from __future__ import annotations
 
-import uuid
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from datetime import UTC, date, datetime
 
 import httpx
 import pytest
-import pytest_asyncio
 from fastapi import FastAPI
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -33,6 +31,7 @@ async def _db_session(app: FastAPI) -> AsyncIterator[AsyncSession]:
         yield session
     finally:
         await gen.aclose()
+
 
 # ── helpers ───────────────────────────────────────────────────────────────────
 
@@ -107,9 +106,7 @@ async def test_post_critical_vitals_creates_alert(
 
     # Check DB directly via the overridden session
     async with _db_session(app) as db:
-        result = await db.execute(
-            select(Alert).where(Alert.trigger_parameter == "heart_rate")
-        )
+        result = await db.execute(select(Alert).where(Alert.trigger_parameter == "heart_rate"))
         alerts = list(result.scalars().all())
 
     assert len(alerts) == 1
@@ -147,7 +144,7 @@ async def test_post_critical_lab_creates_alert_with_protocol_link(
     client: httpx.AsyncClient,
     app: FastAPI,
 ) -> None:
-    """AC 3: POST /labs K+=6.2 (critical) → 201 + Alert with protocol_link containing hyperkalemia."""
+    """AC 3: POST /labs K+=6.2 (critical) → 201 + Alert with hyperkalemia protocol_link."""
     headers = await _auth_header(client)
     pid = await _create_patient(client, headers)
 
@@ -167,9 +164,7 @@ async def test_post_critical_lab_creates_alert_with_protocol_link(
     assert r.json()["is_critical"] is True
 
     async with _db_session(app) as db:
-        result = await db.execute(
-            select(Alert).where(Alert.patient_id == pid)
-        )
+        result = await db.execute(select(Alert).where(Alert.patient_id == pid))
         alerts = list(result.scalars().all())
 
     assert len(alerts) == 1

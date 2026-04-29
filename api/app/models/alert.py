@@ -32,9 +32,7 @@ class Alert(Base):
     acknowledged_by: Mapped[uuid.UUID | None] = mapped_column(
         _UUIDString(), ForeignKey("users.id", ondelete="SET NULL"), nullable=True
     )
-    acknowledged_at: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True), nullable=True
-    )
+    acknowledged_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )

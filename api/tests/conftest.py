@@ -21,7 +21,7 @@ from app.models.db import get_session
 def _clinical_env_defaults() -> None:
     """Set required clinical config env vars for test session (no real .env available)."""
     os.environ.setdefault("CLINICAL_HR_MIN", "40")
-    os.environ.setdefault("CLINICAL_HR_MAX", "130")   # 135 bpm > 130 → critical (T104)
+    os.environ.setdefault("CLINICAL_HR_MAX", "130")  # 135 bpm > 130 → critical (T104)
     os.environ.setdefault("CLINICAL_SBP_MIN", "90")
     os.environ.setdefault("CLINICAL_LAB_K_CRITICAL_HIGH", "6.0")
     os.environ.setdefault("CLINICAL_LAB_K_CRITICAL_LOW", "2.5")

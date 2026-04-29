@@ -19,13 +19,13 @@ from app.core.logging import configure_logging
 from app.core.middleware import BearerAuthMiddleware
 from app.core.ratelimit import limiter
 from app.routers import alerts as alerts_module
-from app.routers.alerts import alerts_acknowledge_router
 from app.routers import auth as auth_router
 from app.routers import health as health_router
 from app.routers import labs as labs_router
 from app.routers import patients as patients_router
 from app.routers import protocols as protocols_router
 from app.routers import vitals as vitals_router
+from app.routers.alerts import alerts_acknowledge_router
 
 API_PREFIX = "/api/v1"
 

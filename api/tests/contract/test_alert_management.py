@@ -14,7 +14,6 @@ from datetime import UTC, date, datetime
 import httpx
 import pytest
 from fastapi import FastAPI
-from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.alert import Alert
@@ -124,15 +123,11 @@ async def test_get_alerts_filter_by_alert_type(
     await _insert_alert(app, pid, "critical")
     await _insert_alert(app, pid, "warning")
 
-    r_crit = await client.get(
-        f"/api/v1/patients/{pid}/alerts?alert_type=critical", headers=headers
-    )
+    r_crit = await client.get(f"/api/v1/patients/{pid}/alerts?alert_type=critical", headers=headers)
     assert r_crit.status_code == 200, r_crit.text
     assert len(r_crit.json()["alerts"]) == 2
 
-    r_warn = await client.get(
-        f"/api/v1/patients/{pid}/alerts?alert_type=warning", headers=headers
-    )
+    r_warn = await client.get(f"/api/v1/patients/{pid}/alerts?alert_type=warning", headers=headers)
     assert r_warn.status_code == 200, r_warn.text
     assert len(r_warn.json()["alerts"]) == 1
 
@@ -147,18 +142,14 @@ async def test_get_alerts_filter_by_acknowledged(
 
     alert_id = await _insert_alert(app, pid)
 
-    r = await client.get(
-        f"/api/v1/patients/{pid}/alerts?acknowledged=false", headers=headers
-    )
+    r = await client.get(f"/api/v1/patients/{pid}/alerts?acknowledged=false", headers=headers)
     assert r.status_code == 200, r.text
     assert len(r.json()["alerts"]) == 1
 
     # Acknowledge it, then filter should return 0
     await client.post(f"/api/v1/alerts/{alert_id}/acknowledge", headers=headers)
 
-    r_after = await client.get(
-        f"/api/v1/patients/{pid}/alerts?acknowledged=false", headers=headers
-    )
+    r_after = await client.get(f"/api/v1/patients/{pid}/alerts?acknowledged=false", headers=headers)
     assert r_after.status_code == 200, r_after.text
     assert len(r_after.json()["alerts"]) == 0
 

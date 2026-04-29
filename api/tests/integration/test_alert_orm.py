@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import uuid
 from collections.abc import AsyncIterator
-from datetime import UTC, date, datetime
+from datetime import date
 
 import pytest
 import pytest_asyncio

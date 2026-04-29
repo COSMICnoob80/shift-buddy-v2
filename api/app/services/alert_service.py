@@ -15,16 +15,14 @@ from __future__ import annotations
 import math
 import uuid
 from datetime import UTC, datetime
-from typing import TYPE_CHECKING
 
 import structlog
-from fastapi import Depends, HTTPException
+from fastapi import HTTPException
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.clinical_config import ClinicalConfig, get_clinical_config, get_vital_thresholds
+from app.core.clinical_config import ClinicalConfig, get_clinical_config
 from app.models.alert import Alert
-from app.models.db import get_session
 from app.models.lab_result import LabResult
 from app.models.vital_signs import VitalSigns
 from app.schemas.alerts import (
@@ -36,7 +34,6 @@ from app.schemas.alerts import (
 from app.schemas.labs import LabCreate, LabRead
 from app.schemas.vitals import VitalsCreate, VitalsRead
 from app.services.lab_service import compute_is_critical
-from app.services.patient_service import get_patient_or_404
 
 _logger = structlog.get_logger(__name__)
 
@@ -81,13 +78,13 @@ def evaluate_vital_thresholds(
         alert_type: str | None = None
 
         # Critical tier takes priority over warning
-        if threshold.crit_high is not None and float_val > threshold.crit_high:
+        crit_high_breach = threshold.crit_high is not None and float_val > threshold.crit_high
+        crit_low_breach = threshold.crit_low is not None and float_val < threshold.crit_low
+        warn_high_breach = threshold.warn_high is not None and float_val > threshold.warn_high
+        warn_low_breach = threshold.warn_low is not None and float_val < threshold.warn_low
+        if crit_high_breach or crit_low_breach:
             alert_type = "critical"
-        elif threshold.crit_low is not None and float_val < threshold.crit_low:
-            alert_type = "critical"
-        elif threshold.warn_high is not None and float_val > threshold.warn_high:
-            alert_type = "warning"
-        elif threshold.warn_low is not None and float_val < threshold.warn_low:
+        elif warn_high_breach or warn_low_breach:
             alert_type = "warning"
 
         if alert_type is not None:
@@ -243,9 +240,7 @@ async def list_alerts(
     total = (await db.scalar(count_q)) or 0
     total_pages = math.ceil(total / limit) if total > 0 else 0
 
-    page_q = (
-        base_q.order_by(Alert.created_at.desc()).offset((page - 1) * limit).limit(limit)
-    )
+    page_q = base_q.order_by(Alert.created_at.desc()).offset((page - 1) * limit).limit(limit)
     result = await db.execute(page_q)
     rows = list(result.scalars().all())
 
@@ -268,7 +263,10 @@ async def acknowledge_alert(
     if alert.acknowledged:
         raise HTTPException(
             status_code=409,
-            detail={"error": "already_acknowledged", "message": "Alert has already been acknowledged"},
+            detail={
+                "error": "already_acknowledged",
+                "message": "Alert has already been acknowledged",
+            },
         )
 
     now = datetime.now(UTC)
