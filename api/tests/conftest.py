@@ -21,7 +21,7 @@ from app.models.db import get_session
 def _clinical_env_defaults() -> None:
     """Set required clinical config env vars for test session (no real .env available)."""
     os.environ.setdefault("CLINICAL_HR_MIN", "40")
-    os.environ.setdefault("CLINICAL_HR_MAX", "160")
+    os.environ.setdefault("CLINICAL_HR_MAX", "130")   # 135 bpm > 130 → critical (T104)
     os.environ.setdefault("CLINICAL_SBP_MIN", "90")
     os.environ.setdefault("CLINICAL_LAB_K_CRITICAL_HIGH", "6.0")
     os.environ.setdefault("CLINICAL_LAB_K_CRITICAL_LOW", "2.5")
@@ -34,7 +34,7 @@ def _clinical_env_defaults() -> None:
     os.environ.setdefault("CLINICAL_LAB_BS_CRITICAL_LOW", "54.0")
     os.environ.setdefault("CLINICAL_LAB_LACTATE_CRITICAL_HIGH", "4.0")
     # P1b vital-sign thresholds
-    os.environ.setdefault("CLINICAL_VITAL_HR_WARN_LOW", "50")
+    os.environ.setdefault("CLINICAL_VITAL_HR_WARN_LOW", "60")  # 55 bpm < 60 → warning (T104)
     os.environ.setdefault("CLINICAL_VITAL_HR_WARN_HIGH", "110")
     os.environ.setdefault("CLINICAL_VITAL_SBP_WARN_LOW", "100")
     os.environ.setdefault("CLINICAL_VITAL_SBP_WARN_HIGH", "160")
