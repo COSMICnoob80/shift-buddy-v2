@@ -33,6 +33,28 @@ def _clinical_env_defaults() -> None:
     os.environ.setdefault("CLINICAL_LAB_BS_CRITICAL_HIGH", "400.0")
     os.environ.setdefault("CLINICAL_LAB_BS_CRITICAL_LOW", "54.0")
     os.environ.setdefault("CLINICAL_LAB_LACTATE_CRITICAL_HIGH", "4.0")
+    # P1b vital-sign thresholds
+    os.environ.setdefault("CLINICAL_VITAL_HR_WARN_LOW", "50")
+    os.environ.setdefault("CLINICAL_VITAL_HR_WARN_HIGH", "110")
+    os.environ.setdefault("CLINICAL_VITAL_SBP_WARN_LOW", "100")
+    os.environ.setdefault("CLINICAL_VITAL_SBP_WARN_HIGH", "160")
+    os.environ.setdefault("CLINICAL_VITAL_SBP_CRIT_HIGH", "180")
+    os.environ.setdefault("CLINICAL_VITAL_DBP_WARN_HIGH", "100")
+    os.environ.setdefault("CLINICAL_VITAL_DBP_CRIT_HIGH", "110")
+    os.environ.setdefault("CLINICAL_VITAL_TEMP_WARN_LOW", "36.0")
+    os.environ.setdefault("CLINICAL_VITAL_TEMP_WARN_HIGH", "38.0")
+    os.environ.setdefault("CLINICAL_VITAL_TEMP_CRIT_LOW", "35.0")
+    os.environ.setdefault("CLINICAL_VITAL_TEMP_CRIT_HIGH", "39.5")
+    os.environ.setdefault("CLINICAL_VITAL_SPO2_WARN_LOW", "94")
+    os.environ.setdefault("CLINICAL_VITAL_SPO2_CRIT_LOW", "90")
+    os.environ.setdefault("CLINICAL_VITAL_RR_WARN_LOW", "10")
+    os.environ.setdefault("CLINICAL_VITAL_RR_WARN_HIGH", "24")
+    os.environ.setdefault("CLINICAL_VITAL_RR_CRIT_LOW", "8")
+    os.environ.setdefault("CLINICAL_VITAL_RR_CRIT_HIGH", "30")
+    os.environ.setdefault("CLINICAL_VITAL_BS_WARN_LOW", "70")
+    os.environ.setdefault("CLINICAL_VITAL_BS_WARN_HIGH", "250")
+    os.environ.setdefault("CLINICAL_VITAL_BS_CRIT_LOW", "54")
+    os.environ.setdefault("CLINICAL_VITAL_BS_CRIT_HIGH", "400")
 
 
 @pytest_asyncio.fixture
