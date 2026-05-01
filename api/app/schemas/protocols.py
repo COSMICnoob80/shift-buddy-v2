@@ -8,7 +8,7 @@ its own required fields and raises ValueError for missing/invalid inputs.
 from __future__ import annotations
 
 import uuid
-from typing import Any, Literal
+from typing import Any
 
 from pydantic import BaseModel, Field
 
@@ -21,7 +21,7 @@ class Recommendation(BaseModel):
 
 
 class ProtocolEvaluateRequest(BaseModel):
-    protocol: Literal["hyperkalemia", "aki_staging", "dka"]
+    protocol: str  # validated in router; unknown value → 400 protocol_not_found
     patient_id: uuid.UUID
     values: dict[str, Any]
 

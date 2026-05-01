@@ -1,12 +1,7 @@
 # Clinical Safety Charter — Shift Buddy V2
 
-> **STATUS: INERT (Phase 0). This file becomes BINDING from Phase 1 onward.**
-> **Activation: Phase 1** (when the first clinical route lands in `api/app/routers/`).
-
-Phase 0 ships zero clinical logic. No route in this repo evaluates a dose,
-threshold, or protocol. This document is a scaffolded placeholder so P1
-reviewers land on an unambiguously owned surface. Its text MUST be expanded
-before any P1 clinical route is merged.
+> **STATUS: BINDING (Phase 1 onward)**
+> **Activation: Phase 1b** — P1b merged deterministic protocols and alert engine.
 
 ---
 
@@ -17,21 +12,45 @@ MedGemma and any generative model are **advisory only**, clearly labeled as
 such in every UI surface, and MUST cite their source. Hallucinated doses are
 defects of the same severity class as security vulnerabilities.
 
-- _Placeholder P1 rule:_ **No hallucinated doses.** Any numeric dose rendered
-  to a clinician MUST trace to a deterministic table in code, not to an LLM
-  completion. (TBD — P1 detail.)
+**BINDING from P1b:**
 
-## 2. Renal / hepatic dose-adjustment check
+**(a) No hallucinated doses.** Every numeric dose rendered to a clinician MUST
+trace to a deterministic tier table in code (`api/app/protocols/`) — never to an
+LLM completion. The complete lineage is: `ProtocolEvaluateResponse.recommendations[]`
+→ protocol module tier constant → `source` citation string. Any route that
+returns a dose without a traceable `source` field is a P1 defect.
 
-Any advisory surface that presents a dose MUST pass through a
-renal-dose-adjustment check wired against the patient's most recent eGFR.
-Absence of eGFR MUST degrade to "insufficient data — manual review" rather
-than silently skipping the check.
+**(b) Protocol source citations are mandatory.** Every `Recommendation` object
+returned by any protocol evaluator MUST include a non-empty `source` string
+(Principle IX). An empty or missing source is a CI-blocking defect.
 
-- _Placeholder P1 rule:_ **Renal dose check is mandatory on every advisory
-  dose surface.** (TBD — P1 detail.)
+**(c) MedGemma advisory-only boundary.** MedGemma (P2+) MUST NOT override a
+protocol result. If MedGemma contradicts a deterministic protocol outcome, the
+protocol result is authoritative and MedGemma's output is surfaced as a
+secondary annotation with the label **"Advisory — not a prescription"**.
 
-## 3. MedGemma advisory-only boundary
+**(d) Renal dose check is mandatory.** Any advisory surface that presents a
+dose MUST pass through a renal-dose-adjustment check wired against the
+patient's most recent eGFR. Absence of eGFR MUST degrade to
+"insufficient data — manual review" rather than silently skipping the check.
+(P2+ implementation gate; violation blocks P2 merge.)
+
+---
+
+## 2. Deterministic protocol engine (P1b)
+
+Three protocols are live in `api/app/protocols/`:
+- `hyperkalemia.py` — AHA 2023 / KDIGO 2023 tier table
+- `dka.py` — ADA 2024 / WHO severity classification
+- `aki_staging.py` — KDIGO 2023 creatinine criteria (async DB baseline lookup)
+
+All tier constants are **fixed clinical guidelines** — NOT configurable via
+`clinical_config.py`. Hospital tuning of these constants requires a
+constitution amendment (Principle XI, exception documented here).
+
+---
+
+## 3. MedGemma advisory-only boundary (P2+)
 
 MedGemma outputs are rendered with:
 
@@ -41,8 +60,9 @@ MedGemma outputs are rendered with:
 3. a one-tap **"Request senior review"** escalation that bypasses the LLM
    entirely.
 
-- _Placeholder P1 rule:_ **MedGemma MUST NOT be the final authority on any
-  decision that reaches a patient.** (TBD — P1 detail.)
+MedGemma MUST NOT be the final authority on any decision that reaches a patient.
+
+---
 
 ## 4. Shadow-First deployment gate (Constitution Principle XIII)
 
@@ -51,12 +71,29 @@ shadow mode with telemetry captured in `shadow_events` until divergence vs.
 House Officer ground-truth falls below a per-feature threshold documented in
 its `plan.md`. Graduation to autonomous requires a constitution amendment.
 
-_P0 artifact scaffolding (Principle XIV):_ `shadow_events` table, feature
-flag loader, and this ADR-style charter. Expansion lives in P1+ per-feature
-plans.
+P1b activates the `shadow_events` MEP hinge: every `POST /protocols/evaluate`
+call writes one de-identified row (`event_type="protocol_evaluation"`,
+`payload={protocol, severity, actions_count}`). Divergence scoring is deferred
+to the P2+ agent layer.
+
+---
+
+## 5. Alert engine safety (P1b)
+
+Alert thresholds are sourced exclusively from `clinical_config.py`
+(Constitution Principle XI). Zero threshold literals in `alert_service.py`
+or any router. Any direct threshold literal is a defect regardless of value.
+
+Alert `message` is de-identified: it references `trigger_parameter` +
+`trigger_value` + severity text only. It MUST NOT contain patient name,
+bed number, or any PHI.
 
 ---
 
 ## Change log
 
 - **2026-04-21** — Inert P0 scaffold created. No binding content until P1.
+- **2026-05-01** — **STATUS updated to BINDING.** P1b rules activated: deterministic
+  protocol engine live, alert engine live, shadow events wired, MedGemma boundary
+  stated, mandatory source citations enforced, PHI-free alert messages confirmed.
+  Sections 1–5 are now authoritative from P1b onward.
