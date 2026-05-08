@@ -1,0 +1,119 @@
+{
+  "chapters": [
+    {
+      "id": "hyperkalemia",
+      "title": "Hyperkalemia",
+      "topics": [
+        {
+          "id": "hyperkalemia-overview",
+          "title": "Overview & Thresholds",
+          "content": "Hyperkalemia is defined as serum potassium > 5.5 mEq/L. Risk increases sharply above 6.0 mEq/L.\n\n**Severity tiers:**\n- Normal: K+ ≤ 5.5\n- Mild: 5.5–5.9 mEq/L\n- Moderate: 6.0–6.4 mEq/L\n- Severe: 6.5–6.9 mEq/L\n- Emergency: ≥ 6.5 mEq/L, or any level with ECG changes\n\n**Source:** AHA Scientific Statement on Hyperkalemia 2023."
+        },
+        {
+          "id": "hyperkalemia-ecg",
+          "title": "ECG Changes",
+          "content": "ECG changes escalate management to Emergency regardless of K+ level.\n\n**Progression of ECG findings:**\n1. Peaked T waves (earliest, K+ ~5.5–6.5)\n2. Prolonged PR interval\n3. Widened QRS (> 120 ms) — imminent arrest risk\n4. Sine-wave pattern, VF\n\n**Action:** If QRS widening or sine-wave pattern → immediate IV Calcium Gluconate 1 g over 5–10 min. Repeat if no ECG improvement in 5 min."
+        },
+        {
+          "id": "hyperkalemia-management",
+          "title": "Management Steps",
+          "content": "**Stabilise membrane (immediate):**\n- Calcium Gluconate 10% 10 mL IV over 5–10 min (cardiac protection, onset 1–3 min)\n\n**Shift K+ intracellularly (within 30 min):**\n- Insulin 10 units IV + Dextrose 50% 50 mL (monitor glucose q1h)\n- Salbutamol 10–20 mg nebulised (additive to insulin)\n- Sodium bicarbonate 50 mEq IV if metabolic acidosis\n\n**Remove K+ from body (hours):**\n- Furosemide 40–80 mg IV (if urine output adequate)\n- Patiromer or sodium zirconium cyclosilicate (oral, slower)\n- Haemodialysis if refractory or severe AKI\n\n**Monitor:** ECG continuous; K+ recheck at 1 h, 4 h, 12 h."
+        }
+      ]
+    },
+    {
+      "id": "dka",
+      "title": "DKA",
+      "topics": [
+        {
+          "id": "dka-overview",
+          "title": "Overview & Diagnosis",
+          "content": "Diabetic Ketoacidosis (DKA) requires all three:\n1. Blood glucose > 250 mg/dL (13.9 mmol/L)\n2. Arterial pH < 7.30 (or venous pH < 7.25)\n3. Bicarbonate < 18 mEq/L AND positive serum/urine ketones\n\n**Severity:**\n- Mild: pH 7.25–7.30, HCO₃ 15–18\n- Moderate: pH 7.00–7.24, HCO₃ 10–14\n- Severe: pH < 7.00, HCO₃ < 10\n\n**Source:** ADA Standards of Care 2024."
+        },
+        {
+          "id": "dka-fluids",
+          "title": "Fluid Resuscitation",
+          "content": "**Hour 1:** 0.9% NaCl 1 L IV bolus (or 15–20 mL/kg).\n\n**Subsequent:** Adjust based on corrected Na+:\n- Low corrected Na+ → 0.9% NaCl\n- Normal/high corrected Na+ → 0.45% NaCl\n\n**Rate:** 250–500 mL/h until corrected. Total deficit often 3–6 L.\n\n**When glucose reaches 200–250 mg/dL:** add Dextrose 5% to fluids to prevent hypoglycaemia while continuing insulin to clear ketones."
+        },
+        {
+          "id": "dka-insulin",
+          "title": "Insulin Protocol",
+          "content": "**Do NOT start insulin if K+ < 3.5** — replace potassium first (risk of fatal hypokalaemia).\n\n**Fixed-rate IV Insulin (FRIII):** 0.1 unit/kg/h (max 15 units/h).\n\n**Target:** glucose fall of 50–70 mg/dL/h. If < 50 mg/dL/h at 1 h → increase rate by 50%.\n\n**Potassium replacement during insulin:**\n- K+ < 3.5: hold insulin, give 40 mEq/h KCl\n- K+ 3.5–5.5: add 20–40 mEq/L to IV fluids\n- K+ > 5.5: no K+ supplementation\n\n**Resolution criteria:** pH > 7.30, HCO₃ > 18, anion gap ≤ 12."
+        },
+        {
+          "id": "dka-mental-status",
+          "title": "Altered Mental Status in DKA",
+          "content": "Altered mental status (confusion, obtundation, coma) in DKA warrants immediate senior review.\n\n**Differentials:** cerebral oedema (more common in children), severe acidosis, hyperosmolality, concurrent sepsis, stroke.\n\n**Cerebral oedema signs:** headache, agitation, papilloedema, Cushing's triad. If suspected → Mannitol 0.5–1 g/kg IV stat, restrict fluids, senior/ICU review."
+        }
+      ]
+    },
+    {
+      "id": "aki",
+      "title": "AKI",
+      "topics": [
+        {
+          "id": "aki-staging",
+          "title": "KDIGO Staging",
+          "content": "AKI is diagnosed and staged by the KDIGO 2023 criteria:\n\n**Stage 1:** Creatinine rise ≥ 0.3 mg/dL within 48 h, OR 1.5–1.9× baseline within 7 days.\n**Stage 2:** Creatinine 2.0–2.9× baseline.\n**Stage 3:** Creatinine ≥ 3× baseline, OR ≥ 4.0 mg/dL, OR initiation of renal replacement therapy.\n\nBaseline = lowest Cr in preceding 48 h (or 7 days if available).\n\n**Source:** KDIGO AKI Guidelines 2023."
+        },
+        {
+          "id": "aki-management",
+          "title": "Management by Stage",
+          "content": "**All stages:**\n- Identify and treat cause (hypovolaemia, sepsis, nephrotoxins, obstruction)\n- Stop ACEi/ARB, NSAIDs, aminoglycosides, contrast\n- Optimise fluid status: target MAP > 65 mmHg\n- Monitor urine output (target > 0.5 mL/kg/h)\n- Avoid nephrotoxic agents\n\n**Stage 2–3:**\n- Senior/nephrology review\n- Daily U&E, creatinine\n- Renal replacement therapy (RRT) if: refractory hyperkalaemia/acidosis, volume overload, uraemic symptoms\n\n**Obstruction:** urgent urological review if suspected post-renal cause."
+        },
+        {
+          "id": "aki-hyperkalemia-link",
+          "title": "AKI + Hyperkalaemia",
+          "content": "AKI commonly causes hyperkalaemia due to impaired renal K+ excretion.\n\n**Monitoring:** K+ every 6–12 h in Stage 2–3 AKI.\n\n**Management:** same as Hyperkalemia protocol. In AKI with renal failure, furosemide may be ineffective — consider RRT early if K+ refractory.\n\n**High-risk combinations:** AKI + ACEi/ARB + K+-sparing diuretics → highest hyperkalaemia risk."
+        }
+      ]
+    },
+    {
+      "id": "acs-chest-pain",
+      "title": "ACS / Chest Pain",
+      "topics": [
+        {
+          "id": "acs-overview",
+          "title": "Overview & Risk Stratification",
+          "content": "Acute Coronary Syndrome encompasses:\n- **STEMI:** ST-elevation ≥ 1 mm in ≥ 2 contiguous limb leads, ≥ 2 mm in chest leads → immediate catheterisation lab activation\n- **NSTEMI:** Troponin rise without ST-elevation\n- **Unstable Angina:** Chest pain without troponin rise\n\n**Initial ECG within 10 min of arrival is mandatory.**\n\n**TIMI Risk Score** (0–7): ≥ 5 = high risk → early invasive strategy.\n\n**Source:** ESC ACS Guidelines 2023."
+        },
+        {
+          "id": "acs-stemi",
+          "title": "STEMI Management",
+          "content": "**Time is muscle — door-to-balloon < 90 min.**\n\n**Immediate (parallel):**\n1. Aspirin 300 mg PO stat\n2. P2Y12 inhibitor: Ticagrelor 180 mg PO (preferred) or Clopidogrel 600 mg\n3. Heparin UFH 60 units/kg IV (max 4000 units) bolus\n4. Activate catheterisation lab\n\n**If PCI unavailable within 120 min:** Thrombolysis (Alteplase or Tenecteplase) — senior decision.\n\n**Do NOT delay PCI for thrombolysis discussion.**\n\n**Post-PCI:** Dual antiplatelet + statin + ACEi; beta-blocker if haemodynamically stable."
+        },
+        {
+          "id": "acs-nstemi",
+          "title": "NSTEMI / UA Management",
+          "content": "**Initial:**\n- Aspirin 300 mg PO stat\n- Ticagrelor 180 mg (or Clopidogrel 300 mg if ticagrelor unavailable)\n- Anticoagulation: Enoxaparin 1 mg/kg SC q12h (adjust for eGFR < 30)\n- GTN spray if chest pain ongoing\n- Monitor: serial ECGs q1h for 6 h, Troponin at 0 and 3 h\n\n**High-risk (TIMI ≥ 5):** Early invasive strategy within 24 h.\n\n**Note:** Morphine use is controversial in NSTEMI — may delay P2Y12 absorption. Discuss with senior."
+        }
+      ]
+    },
+    {
+      "id": "sepsis-sirs",
+      "title": "Sepsis / SIRS",
+      "topics": [
+        {
+          "id": "sepsis-overview",
+          "title": "Overview & Definitions",
+          "content": "**SIRS (≥ 2 criteria):**\n- Temp > 38°C or < 36°C\n- HR > 90 bpm\n- RR > 20 or PaCO₂ < 32 mmHg\n- WBC > 12,000 or < 4,000 or > 10% bands\n\n**Sepsis (Sepsis-3):** Life-threatening organ dysfunction caused by dysregulated host response to infection. SOFA score increase ≥ 2.\n\n**Septic Shock:** Sepsis + vasopressors needed to maintain MAP ≥ 65 + Lactate > 2 mmol/L despite adequate fluids.\n\n**Source:** Surviving Sepsis Campaign 2021."
+        },
+        {
+          "id": "sepsis-hour-1",
+          "title": "Hour-1 Bundle",
+          "content": "Complete within 1 hour of sepsis recognition:\n\n1. **Measure lactate** — if ≥ 2 mmol/L, repeat at 2 h\n2. **Blood cultures × 2** before antibiotics (do NOT delay antibiotics > 45 min for cultures)\n3. **Broad-spectrum antibiotics** IV (local antibiogram guides choice; e.g., Piperacillin-tazobactam 4.5 g + Vancomycin if MRSA risk)\n4. **30 mL/kg crystalloid IV** if hypotension or lactate ≥ 4\n5. **Vasopressors** if MAP < 65 despite fluids → Noradrenaline first-line\n\n**Alert:** Delay in antibiotics beyond 1 h is independently associated with increased mortality."
+        },
+        {
+          "id": "sepsis-source-control",
+          "title": "Source Control",
+          "content": "Identify and control source within 6–12 h:\n\n**Common sources:**\n- Lung (pneumonia) — CXR, sputum culture\n- Urinary tract — urine MC&S, consider catheter removal/replacement\n- Abdomen — CT if peritonism; surgical review\n- Soft tissue / necrotising fasciitis — surgical emergency\n- Central line — remove if line sepsis suspected; peripheral IV access only until new line placed\n\n**Key principle:** Antibiotics treat the host response, not the source. Source control is definitive treatment."
+        },
+        {
+          "id": "sepsis-organ-support",
+          "title": "Organ Support",
+          "content": "**Haemodynamic:**\n- MAP target ≥ 65 mmHg; higher (70–85) in chronic hypertension\n- Noradrenaline first-line vasopressor\n- Add Vasopressin 0.03 units/min if noradrenaline > 0.25 mcg/kg/min\n- Dobutamine if cardiac output low (SvO₂ < 65%)\n\n**Respiratory:**\n- High-flow O₂ or NIV if SpO₂ < 92%\n- Early intubation if GCS ≤ 8 or respiratory fatigue\n\n**Renal:**\n- Monitor urine output; AKI common in sepsis\n- Avoid nephrotoxins; consider RRT if AKI Stage 3\n\n**Glycaemic:** Target glucose 7.8–10 mmol/L; avoid hypoglycaemia."
+        }
+      ]
+    }
+  ]
+}
