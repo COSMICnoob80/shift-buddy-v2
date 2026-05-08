@@ -4,7 +4,7 @@
  * Action buttons: Add Vitals, Add Labs, Camera, Share.
  */
 
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Linking,
   Pressable,
@@ -19,6 +19,10 @@ import { SQLiteDatabase } from 'expo-sqlite';
 import { getDb } from '../../../lib/db';
 import AlertBanner from '../../../components/AlertBanner';
 import { generateSummary } from '../../../lib/summary';
+import { evaluate as evaluateHyperkalemia } from '../../../lib/protocols/hyperkalemia';
+import { evaluate as evaluateDka } from '../../../lib/protocols/dka';
+import { evaluateAki } from '../../../lib/protocols/aki_staging';
+import { ProtocolResult } from '../../../lib/protocols/types';
 
 interface Patient {
   id: string; name: string; bed_number: string; diagnosis: string;
@@ -60,6 +64,55 @@ async function loadDetail(db: SQLiteDatabase, id: string) {
   return { patient, alerts, vitals, labs: Array.from(labMap.values()) };
 }
 
+const PROTOCOL_SEVERITY_STYLES: Record<string, { bg: string; border: string; text: string; label: string }> = {
+  emergency: { bg: '#fef2f2', border: '#dc2626', text: '#dc2626', label: 'EMERGENCY' },
+  emergency_ecg: { bg: '#fef2f2', border: '#dc2626', text: '#dc2626', label: 'EMERGENCY' },
+  severe: { bg: '#fef2f2', border: '#dc2626', text: '#dc2626', label: 'SEVERE' },
+  stage_3: { bg: '#fef2f2', border: '#dc2626', text: '#dc2626', label: 'STAGE 3' },
+  stage_2: { bg: '#fffbeb', border: '#d97706', text: '#d97706', label: 'STAGE 2' },
+  moderate: { bg: '#fffbeb', border: '#d97706', text: '#d97706', label: 'MODERATE' },
+  stage_1: { bg: '#fffbeb', border: '#d97706', text: '#d97706', label: 'STAGE 1' },
+  mild: { bg: '#f0fdf4', border: '#16a34a', text: '#16a34a', label: 'MILD' },
+  needs_abg: { bg: '#f0f9ff', border: '#0284c7', text: '#0284c7', label: 'NEEDS ABG' },
+};
+
+function getProtocolResult(
+  alert: AlertRow,
+  labs: LabRow[],
+  patientId: string,
+  db: SQLiteDatabase,
+): ProtocolResult | null {
+  switch (alert.parameter) {
+    case 'K+': {
+      const result = evaluateHyperkalemia(alert.value, false);
+      return result.alertGenerated ? result : null;
+    }
+    case 'blood_sugar': {
+      const phLab = labs.find(l => l.test_name.toLowerCase() === 'ph');
+      const hco3Lab = labs.find(l => /^hco3$|bicarb/i.test(l.test_name));
+      if (phLab != null && hco3Lab != null) {
+        return evaluateDka(alert.value, phLab.value, hco3Lab.value, 'alert');
+      }
+      return {
+        severity: 'needs_abg',
+        recommendations: [{
+          action: 'Check ABG (pH, HCO3) to classify DKA severity',
+          priority: 1,
+          rationale: `Blood sugar ${alert.value} mg/dL — ABG needed for DKA evaluation`,
+          source: 'DKA Management Guidelines (ADA 2024 / WHO)',
+        }],
+        escalation: 'Blood sugar critically elevated — obtain ABG STAT',
+        alertGenerated: true,
+      };
+    }
+    case 'creatinine': {
+      return evaluateAki(alert.value, patientId, new Date(alert.created_at), db);
+    }
+    default:
+      return null;
+  }
+}
+
 export default function PatientDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const [db, setDb] = useState<SQLiteDatabase | null>(null);
@@ -77,6 +130,17 @@ export default function PatientDetailScreen() {
   }, [db, id]);
 
   useEffect(() => { if (db) refresh(); }, [db, refresh]);
+
+  const protocolResults = useMemo(() => {
+    if (!db || !detail) return [];
+    const { patient, alerts, labs } = detail;
+    return alerts
+      .map(alert => {
+        const result = getProtocolResult(alert, labs, patient.id, db);
+        return result && result.alertGenerated ? { alert, result } : null;
+      })
+      .filter((r): r is { alert: AlertRow; result: ProtocolResult } => r !== null);
+  }, [detail, db]);
 
   async function handleShare() {
     if (!db || !id) return;
@@ -138,6 +202,15 @@ export default function PatientDetailScreen() {
           alerts.map((a) => <AlertBanner key={a.id} alert={a} />)
         )}
       </Section>
+
+      {/* Recommended Actions — protocol-driven */}
+      {protocolResults.length > 0 && (
+        <Section title={`Recommended Actions (${protocolResults.length})`}>
+          {protocolResults.map(({ alert, result }) => (
+            <ProtocolActions key={alert.id} result={result} parameter={alert.parameter} value={alert.value} unit={alert.unit} />
+          ))}
+        </Section>
+      )}
 
       {/* Latest vitals */}
       <Section title="Latest Vitals">
@@ -211,6 +284,41 @@ function VitalCell({ label, value, unit }: { label: string; value: number | null
   );
 }
 
+function ProtocolActions({ result, parameter, value, unit }: { result: ProtocolResult; parameter: string; value: number; unit: string | null }) {
+  const colors = PROTOCOL_SEVERITY_STYLES[result.severity] ?? { bg: '#f9fafb', border: '#6b7280', text: '#374151', label: result.severity.toUpperCase() };
+
+  return (
+    <View style={[styles.protocolBlock, { backgroundColor: colors.bg, borderLeftColor: colors.border }]}>
+      <View style={styles.protocolHeader}>
+        <View style={[styles.protocolBadge, { backgroundColor: colors.border }]}>
+          <Text style={styles.protocolBadgeText}>{colors.label}</Text>
+        </View>
+        <Text style={styles.protocolParam}>
+          {parameter} = {value}{unit ? ` ${unit}` : ''}
+        </Text>
+      </View>
+
+      {result.recommendations.map((rec) => (
+        <View key={rec.priority} style={styles.recRow}>
+          <View style={[styles.recNumber, { backgroundColor: colors.border }]}>
+            <Text style={styles.recNumberText}>{rec.priority}</Text>
+          </View>
+          <View style={styles.recContent}>
+            <Text style={styles.recAction}>{rec.action}</Text>
+            <Text style={styles.recRationale}>{rec.rationale}</Text>
+          </View>
+        </View>
+      ))}
+
+      {result.escalation && (
+        <View style={styles.escalationBanner}>
+          <Text style={styles.escalationText}>🚨 {result.escalation}</Text>
+        </View>
+      )}
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f9fafb' },
   content: { padding: 16, paddingBottom: 40 },
@@ -237,4 +345,17 @@ const styles = StyleSheet.create({
   labName: { fontSize: 14, color: '#374151', fontWeight: '500' },
   labValue: { fontSize: 14, color: '#111827', fontWeight: '600' },
   meds: { fontSize: 14, color: '#374151', lineHeight: 20 },
+  protocolBlock: { borderRadius: 8, borderLeftWidth: 4, padding: 12, marginBottom: 8 },
+  protocolHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 10 },
+  protocolBadge: { borderRadius: 4, paddingHorizontal: 8, paddingVertical: 3 },
+  protocolBadgeText: { color: '#fff', fontSize: 11, fontWeight: '800', letterSpacing: 0.5 },
+  protocolParam: { fontSize: 14, fontWeight: '700', color: '#111827' },
+  recRow: { flexDirection: 'row', gap: 10, marginBottom: 8, alignItems: 'flex-start' },
+  recNumber: { width: 22, height: 22, borderRadius: 11, alignItems: 'center', justifyContent: 'center', marginTop: 1 },
+  recNumberText: { color: '#fff', fontSize: 11, fontWeight: '800' },
+  recContent: { flex: 1 },
+  recAction: { fontSize: 13, fontWeight: '600', color: '#111827', lineHeight: 18 },
+  recRationale: { fontSize: 11, color: '#6b7280', lineHeight: 15, marginTop: 1 },
+  escalationBanner: { backgroundColor: '#fef2f2', borderRadius: 6, padding: 10, marginTop: 6, borderWidth: 1, borderColor: '#fecaca' },
+  escalationText: { fontSize: 13, color: '#dc2626', fontWeight: '600', lineHeight: 18 },
 });
