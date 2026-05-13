@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   FlatList,
   Pressable,
@@ -9,8 +9,9 @@ import {
 } from 'react-native';
 import { router } from 'expo-router';
 import { SQLiteDatabase } from 'expo-sqlite';
-import { getDb } from '../../lib/db';
+import { getDb, dischargePatient } from '../../lib/db';
 import PatientCard, { Acuity } from '../../components/PatientCard';
+import { useTheme } from '../../theme/ThemeProvider';
 
 const ACUITY_ORDER: Record<string, number> = {
   critical: 0,
@@ -34,7 +35,7 @@ async function loadPatients(db: SQLiteDatabase): Promise<PatientRow[]> {
            COUNT(CASE WHEN a.acknowledged = 0 THEN 1 END) AS alert_count
     FROM patients p
     LEFT JOIN alerts a ON a.patient_id = p.id
-    WHERE p.status = 'admitted'
+    WHERE p.status = 'active'
     GROUP BY p.id
     ORDER BY p.name
   `);
@@ -48,6 +49,9 @@ export default function PatientListScreen() {
   const [db, setDb] = useState<SQLiteDatabase | null>(null);
   const [patients, setPatients] = useState<PatientRow[]>([]);
   const [refreshing, setRefreshing] = useState(false);
+  const { colors } = useTheme();
+
+  const styles = useMemo(() => createStyles(colors), [colors]);
 
   useEffect(() => {
     getDb().then(setDb);
@@ -67,9 +71,20 @@ export default function PatientListScreen() {
 
   return (
     <View style={styles.container}>
-      <FlatList
+<FlatList
         data={patients}
         keyExtractor={(p) => p.id}
+        ListHeaderComponent={
+          <View style={styles.headerBar}>
+            <Text style={styles.headerTitle}>My Patients</Text>
+            <Pressable
+              style={styles.drugBtn}
+              onPress={() => router.push('/drugs')}
+            >
+              <Text style={styles.drugBtnText}>Drugs</Text>
+            </Pressable>
+          </View>
+        }
         renderItem={({ item }) => (
           <PatientCard
             id={item.id}
@@ -84,6 +99,10 @@ export default function PatientListScreen() {
                 params: { id: item.id },
               })
             }
+            onLongPress={async (id) => {
+              await dischargePatient(id);
+              refresh();
+            }}
           />
         )}
         ListEmptyComponent={
@@ -107,27 +126,45 @@ export default function PatientListScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f9fafb' },
-  list: { paddingVertical: 8, paddingBottom: 80 },
-  empty: { alignItems: 'center', marginTop: 80 },
-  emptyText: { fontSize: 16, color: '#6b7280', fontWeight: '600' },
-  emptyHint: { fontSize: 13, color: '#9ca3af', marginTop: 4 },
-  fab: {
-    position: 'absolute',
-    bottom: 28,
-    right: 24,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: '#0a7ea4',
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOpacity: 0.2,
-    shadowRadius: 6,
-    shadowOffset: { width: 0, height: 3 },
-    elevation: 6,
-  },
-  fabText: { color: '#fff', fontSize: 28, fontWeight: '400', lineHeight: 32 },
-});
+function createStyles(colors: ReturnType<typeof useTheme>['colors']) {
+  return StyleSheet.create({
+    drugBtn: {
+      backgroundColor: colors.primary,
+      borderRadius: 8,
+      paddingHorizontal: 14,
+      paddingVertical: 8,
+    },
+    drugBtnText: { color: colors.background, fontWeight: '700', fontSize: 13 },
+    headerBar: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingHorizontal: 16,
+      paddingTop: 8,
+      paddingBottom: 8,
+    },
+    headerTitle: { fontSize: 18, fontWeight: '700', color: colors.text },
+    container: { flex: 1, backgroundColor: colors.background },
+    list: { paddingVertical: 8, paddingBottom: 80 },
+    empty: { alignItems: 'center', marginTop: 80 },
+    emptyText: { fontSize: 16, color: colors.icon, fontWeight: '600' },
+    emptyHint: { fontSize: 13, color: colors.tabIconDefault, marginTop: 4 },
+    fab: {
+      position: 'absolute',
+      bottom: 28,
+      right: 24,
+      width: 56,
+      height: 56,
+      borderRadius: 28,
+      backgroundColor: colors.primary,
+      alignItems: 'center',
+      justifyContent: 'center',
+      shadowColor: '#000',
+      shadowOpacity: 0.2,
+      shadowRadius: 6,
+      shadowOffset: { width: 0, height: 3 },
+      elevation: 6,
+    },
+    fabText: { color: colors.background, fontSize: 28, fontWeight: '400', lineHeight: 32 },
+  });
+}

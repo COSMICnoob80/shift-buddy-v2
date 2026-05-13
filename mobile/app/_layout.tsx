@@ -2,13 +2,17 @@ import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { View, StyleSheet } from 'react-native';
 import OfflineIndicator from '../components/OfflineIndicator';
+import { ThemeProvider, useTheme } from '../theme/ThemeProvider';
 
-export default function RootLayout() {
+function RootLayoutNav() {
+  const { colors, colorScheme } = useTheme();
   return (
     <>
       <Stack
         screenOptions={{
           headerBackTitle: '',
+          headerStyle: { backgroundColor: colors.background },
+          headerTintColor: colors.text,
           headerRight: () => (
             <View style={styles.headerRight}>
               <OfflineIndicator />
@@ -16,8 +20,7 @@ export default function RootLayout() {
           ),
         }}
       >
-        <Stack.Screen name="index" options={{ headerShown: false }} />
-        <Stack.Screen name="alerts/index" options={{ title: 'Alerts' }} />
+        <Stack.Screen name="index" options={{ headerShown: false, title: 'Doctor On Duty' }} />
         <Stack.Screen name="alerts/index" options={{ title: 'Alerts' }} />
         <Stack.Screen name="patients/index" options={{ title: 'Patients', headerLargeTitle: true }} />
         <Stack.Screen name="patients/add" options={{ title: 'Add Patient', presentation: 'modal' }} />
@@ -25,12 +28,22 @@ export default function RootLayout() {
         <Stack.Screen name="patients/[id]/vitals" options={{ title: 'Vitals', presentation: 'modal' }} />
         <Stack.Screen name="patients/[id]/labs" options={{ title: 'Labs', presentation: 'modal' }} />
         <Stack.Screen name="patients/[id]/camera" options={{ title: 'Camera', presentation: 'modal' }} />
-        <Stack.Screen name="protocols/index" options={{ title: 'Protocols' }} />
-        <Stack.Screen name="protocols/[id]" options={{ title: 'Protocol' }} />
+        <Stack.Screen name="protocols/index" options={{ title: 'Doctor On Duty' }} />
+        <Stack.Screen name="protocols/[id]" options={{ title: 'Doctor On Duty 2021' }} />
+        <Stack.Screen name="protocols/chapter/[chapterId]" options={{ title: 'Doctor On Duty' }} />
         <Stack.Screen name="protocols/calc/[type]" options={{ title: 'Calculator' }} />
+        <Stack.Screen name="drugs/index" options={{ title: 'Drug Formulary' }} />
       </Stack>
-      <StatusBar style="auto" />
+      <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
     </>
+  );
+}
+
+export default function RootLayout() {
+  return (
+    <ThemeProvider>
+      <RootLayoutNav />
+    </ThemeProvider>
   );
 }
 

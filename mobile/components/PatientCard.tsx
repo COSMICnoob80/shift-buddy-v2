@@ -1,5 +1,6 @@
 import React from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View, Alert } from 'react-native';
+import { useTheme } from '../theme/ThemeProvider';
 
 export type Acuity = 'critical' | 'urgent' | 'stable' | 'discharge_ready';
 
@@ -11,14 +12,16 @@ export interface PatientCardProps {
   acuity: Acuity;
   alertCount: number;
   onPress: () => void;
+  onLongPress: (id: string) => void;
 }
 
-const ACUITY_COLOR: Record<Acuity, string> = {
-  critical: '#dc2626',
-  urgent: '#d97706',
-  stable: '#16a34a',
-  discharge_ready: '#2563eb',
+const ACUITY_COLOR_KEYS: Record<Acuity, string> = {
+  critical: 'danger',
+  urgent: 'icon',
+  stable: 'primary',
+  discharge_ready: 'tint',
 };
+
 
 const ACUITY_LABEL: Record<Acuity, string> = {
   critical: 'CRITICAL',
@@ -28,31 +31,48 @@ const ACUITY_LABEL: Record<Acuity, string> = {
 };
 
 export default function PatientCard({
+  id,
   name,
   bedNumber,
   diagnosis,
   acuity,
   alertCount,
   onPress,
+  onLongPress,
 }: PatientCardProps) {
-  const color = ACUITY_COLOR[acuity] ?? '#687076';
+  const { colors } = useTheme();
+  const acuityColorKey = ACUITY_COLOR_KEYS[acuity] as keyof typeof colors;
+  const color = colors[acuityColorKey] || colors.icon;
   const label = ACUITY_LABEL[acuity] ?? acuity.toUpperCase();
+
+  const handleLongPress = () => {
+    Alert.alert(
+      'Discharge Patient',
+      `Are you sure you want to discharge ${name}?`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Discharge', style: 'destructive', onPress: () => onLongPress(id) },
+      ],
+      { cancelable: true }
+    );
+  };
 
   return (
     <Pressable
-      style={({ pressed }) => [styles.card, { borderLeftColor: color }, pressed && styles.pressed]}
+      style={({ pressed }) => [styles.card, { borderLeftColor: color, backgroundColor: colors.cardBackground }, pressed && styles.pressed]}
       onPress={onPress}
+      onLongPress={handleLongPress}
     >
       <View style={styles.row}>
-        <Text style={styles.name}>{name}</Text>
+        <Text style={[styles.name, { color: colors.text }]}>{name}</Text>
         {alertCount > 0 && (
-          <View style={styles.alertBadge}>
+          <View style={[styles.alertBadge, { backgroundColor: colors.danger }]}>
             <Text style={styles.alertBadgeText}>{alertCount}</Text>
           </View>
         )}
       </View>
-      <Text style={styles.bed}>Bed {bedNumber}</Text>
-      <Text style={styles.diagnosis} numberOfLines={1}>
+      <Text style={[styles.bed, { color: colors.icon }]}>Bed {bedNumber}</Text>
+      <Text style={[styles.diagnosis, { color: colors.text }]}>
         {diagnosis}
       </Text>
       <View style={[styles.acuityPill, { backgroundColor: color + '20' }]}>
@@ -64,7 +84,6 @@ export default function PatientCard({
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: '#fff',
     borderRadius: 10,
     borderLeftWidth: 5,
     padding: 14,
@@ -78,7 +97,7 @@ const styles = StyleSheet.create({
   },
   pressed: { opacity: 0.85 },
   row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  name: { fontSize: 17, fontWeight: '700', color: '#11181C', flex: 1 },
+  name: { fontSize: 17, fontWeight: '700', flex: 1 },
   alertBadge: {
     backgroundColor: '#dc2626',
     borderRadius: 10,
@@ -90,8 +109,8 @@ const styles = StyleSheet.create({
     marginLeft: 8,
   },
   alertBadgeText: { color: '#fff', fontSize: 11, fontWeight: '700' },
-  bed: { fontSize: 13, color: '#687076', marginTop: 2 },
-  diagnosis: { fontSize: 14, color: '#374151', marginTop: 4 },
+  bed: { fontSize: 13, marginTop: 2 },
+  diagnosis: { fontSize: 14, marginTop: 4 },
   acuityPill: {
     alignSelf: 'flex-start',
     marginTop: 8,
