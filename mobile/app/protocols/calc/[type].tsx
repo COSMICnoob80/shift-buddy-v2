@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   ScrollView,
   StyleSheet,
@@ -7,16 +7,18 @@ import {
   View,
 } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
+import { useTheme, Colors } from '../../../theme/ThemeProvider';
 import { calcGFR, calcCorrectedCalcium, calcAnionGap } from '../../../lib/calculators';
 
+type ThemeColors = typeof Colors.light;
 type CalcType = 'gfr' | 'corrected-calcium' | 'anion-gap';
-
-// ─── GFR Calculator ────────────────────────────────────────────────────────────
 
 function GFRCalc() {
   const [sex, setSex] = useState<'male' | 'female'>('male');
   const [age, setAge] = useState('');
   const [creatinine, setCreatinine] = useState('');
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
 
   const ageNum = parseFloat(age);
   const crNum = parseFloat(creatinine);
@@ -34,13 +36,17 @@ function GFRCalc() {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <Text style={styles.title}>eGFR (CKD-EPI 2021)</Text>
-      <Text style={styles.label}>Sex</Text>
-      <View style={styles.row}>
+      <Text style={[styles.title, { color: colors.text }]}>eGFR (CKD-EPI 2021)</Text>
+      <Text style={[s_label, { color: colors.textSecondary }]}>Sex</Text>
+      <View style={s_row}>
         {(['male', 'female'] as const).map((s) => (
           <Text
             key={s}
-            style={[styles.toggle, sex === s && styles.toggleActive]}
+            style={[
+              s_toggle,
+              { borderColor: colors.border, color: colors.textSecondary },
+              sex === s && { backgroundColor: colors.primary, borderColor: colors.primary, color: '#fff' },
+            ]}
             onPress={() => setSex(s)}
           >
             {s.charAt(0).toUpperCase() + s.slice(1)}
@@ -56,11 +62,11 @@ function GFRCalc() {
   );
 }
 
-// ─── Corrected Calcium ─────────────────────────────────────────────────────────
-
 function CorrectedCalciumCalc() {
   const [calcium, setCalcium] = useState('');
   const [albumin, setAlbumin] = useState('');
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
 
   const caNum = parseFloat(calcium);
   const albNum = parseFloat(albumin);
@@ -77,7 +83,7 @@ function CorrectedCalciumCalc() {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <Text style={styles.title}>Corrected Calcium</Text>
+      <Text style={[styles.title, { color: colors.text }]}>Corrected Calcium</Text>
       <NumInput label="Total Calcium (mg/dL)" value={calcium} onChange={setCalcium} />
       <NumInput label="Albumin (g/dL)" value={albumin} onChange={setAlbumin} />
       {result !== null && (
@@ -87,12 +93,12 @@ function CorrectedCalciumCalc() {
   );
 }
 
-// ─── Anion Gap ─────────────────────────────────────────────────────────────────
-
 function AnionGapCalc() {
   const [na, setNa] = useState('');
   const [cl, setCl] = useState('');
   const [hco3, setHco3] = useState('');
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
 
   const naNum = parseFloat(na);
   const clNum = parseFloat(cl);
@@ -108,7 +114,7 @@ function AnionGapCalc() {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <Text style={styles.title}>Anion Gap</Text>
+      <Text style={[styles.title, { color: colors.text }]}>Anion Gap</Text>
       <NumInput label="Na⁺ (mEq/L)" value={na} onChange={setNa} />
       <NumInput label="Cl⁻ (mEq/L)" value={cl} onChange={setCl} />
       <NumInput label="HCO₃⁻ (mEq/L)" value={hco3} onChange={setHco3} />
@@ -119,42 +125,32 @@ function AnionGapCalc() {
   );
 }
 
-// ─── Shared sub-components ─────────────────────────────────────────────────────
-
-function NumInput({
-  label,
-  value,
-  onChange,
-}: {
-  label: string;
-  value: string;
-  onChange: (v: string) => void;
-}) {
+function NumInput({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
+  const { colors } = useTheme();
   return (
-    <View style={styles.field}>
-      <Text style={styles.label}>{label}</Text>
+    <View style={s_field}>
+      <Text style={[s_label, { color: colors.textSecondary }]}>{label}</Text>
       <TextInput
-        style={styles.input}
+        style={[s_input, { backgroundColor: colors.inputBackground, color: colors.text, borderColor: colors.inputBorder }]}
         value={value}
         onChangeText={onChange}
         keyboardType="decimal-pad"
         placeholder="0.0"
-        placeholderTextColor="#aaa"
+        placeholderTextColor={colors.textTertiary}
       />
     </View>
   );
 }
 
 function ResultBox({ value, note }: { value: string; note: string }) {
+  const { colors } = useTheme();
   return (
-    <View style={styles.result}>
-      <Text style={styles.resultValue}>{value}</Text>
-      <Text style={styles.resultNote}>{note}</Text>
+    <View style={[s_result, { backgroundColor: colors.primary + '12' }]}>
+      <Text style={[s_resultValue, { color: colors.primary }]}>{value}</Text>
+      <Text style={{ fontSize: 14, color: colors.textSecondary, textAlign: 'center' }}>{note}</Text>
     </View>
   );
 }
-
-// ─── Router entry ──────────────────────────────────────────────────────────────
 
 const SCREENS: Record<CalcType, React.FC> = {
   'gfr': GFRCalc,
@@ -165,11 +161,12 @@ const SCREENS: Record<CalcType, React.FC> = {
 export default function CalcScreen() {
   const { type } = useLocalSearchParams<{ type: string }>();
   const Screen = type ? SCREENS[type as CalcType] : null;
+  const { colors } = useTheme();
 
   if (!Screen) {
     return (
-      <View style={styles.notFound}>
-        <Text style={styles.notFoundText}>Unknown calculator: {type}</Text>
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+        <Text style={{ color: colors.textSecondary, fontSize: 16 }}>Unknown calculator: {type}</Text>
       </View>
     );
   }
@@ -177,45 +174,18 @@ export default function CalcScreen() {
   return <Screen />;
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff' },
-  content: { padding: 20, paddingBottom: 60 },
-  title: { fontSize: 22, fontWeight: '700', color: '#11181C', marginBottom: 20 },
-  label: { fontSize: 14, fontWeight: '600', color: '#444', marginBottom: 4 },
-  field: { marginBottom: 16 },
-  input: {
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    fontSize: 18,
-    color: '#111',
-  },
-  row: { flexDirection: 'row', gap: 8, marginBottom: 16 },
-  toggle: {
-    paddingHorizontal: 20,
-    paddingVertical: 8,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#ccc',
-    color: '#555',
-    fontSize: 15,
-  },
-  toggleActive: {
-    backgroundColor: '#0a7ea4',
-    borderColor: '#0a7ea4',
-    color: '#fff',
-  },
-  result: {
-    marginTop: 24,
-    backgroundColor: '#f0f8ff',
-    borderRadius: 12,
-    padding: 20,
-    alignItems: 'center',
-  },
-  resultValue: { fontSize: 28, fontWeight: '700', color: '#0a7ea4', marginBottom: 6 },
-  resultNote: { fontSize: 14, color: '#444', textAlign: 'center' },
-  notFound: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  notFoundText: { color: '#888', fontSize: 16 },
-});
+const s_label: any = { fontSize: 14, fontWeight: '600', marginBottom: 4 };
+const s_field: any = { marginBottom: 16 };
+const s_input: any = { borderWidth: 1, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 10, fontSize: 18 };
+const s_row: any = { flexDirection: 'row', gap: 8, marginBottom: 16 };
+const s_toggle: any = { paddingHorizontal: 20, paddingVertical: 8, borderRadius: 8, borderWidth: 1, fontSize: 15, overflow: 'hidden' };
+const s_result: any = { marginTop: 24, borderRadius: 12, padding: 20, alignItems: 'center' };
+const s_resultValue: any = { fontSize: 28, fontWeight: '700', marginBottom: 6 };
+
+function createStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    container: { flex: 1, backgroundColor: colors.background },
+    content: { padding: 20, paddingBottom: 60 },
+    title: { fontSize: 22, fontWeight: '700', marginBottom: 20 },
+  });
+}

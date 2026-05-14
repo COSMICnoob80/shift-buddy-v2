@@ -1,5 +1,6 @@
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { useTheme } from '../theme/ThemeProvider';
 
 interface Alert {
   id: string;
@@ -13,49 +14,55 @@ interface Alert {
 
 interface AlertBannerProps {
   alert: Alert;
+  onPressProtocol?: () => void;
 }
 
-const SEVERITY_BG: Record<string, string> = {
-  critical: '#fef2f2',
-  warning: '#fffbeb',
-};
-const SEVERITY_BORDER: Record<string, string> = {
-  critical: '#dc2626',
-  warning: '#d97706',
-};
-const SEVERITY_TEXT: Record<string, string> = {
-  critical: '#dc2626',
-  warning: '#d97706',
-};
-
-export default function AlertBanner({ alert }: AlertBannerProps) {
-  const bg = SEVERITY_BG[alert.severity] ?? '#f9fafb';
-  const border = SEVERITY_BORDER[alert.severity] ?? '#6b7280';
-  const textColor = SEVERITY_TEXT[alert.severity] ?? '#374151';
+export default function AlertBanner({ alert, onPressProtocol }: AlertBannerProps) {
+  const { colors } = useTheme();
+  const isCritical = alert.severity === 'critical';
 
   return (
-    <View style={[styles.banner, { backgroundColor: bg, borderLeftColor: border }]}>
-      <Text style={[styles.severity, { color: textColor }]}>
-        ⚠ {alert.severity.toUpperCase()}
+    <View
+      style={[
+        styles.banner,
+        {
+          backgroundColor: isCritical ? '#fef2f2' : '#fffbeb',
+          borderLeftColor: isCritical ? colors.danger : colors.warning,
+        },
+      ]}
+    >
+      <Text style={[styles.severity, { color: isCritical ? colors.danger : colors.warning }]}>
+        {'⚠ '}{alert.severity.toUpperCase()}
       </Text>
       <Text style={styles.message}>{alert.message}</Text>
       {alert.unit ? (
-        <Text style={styles.value}>
-          {alert.parameter}: {alert.value} {alert.unit}
-        </Text>
+        <Text style={styles.value}>{alert.parameter}: {alert.value} {alert.unit}</Text>
       ) : null}
+      {onPressProtocol && (
+        <Pressable style={[styles.protocolBtn, { backgroundColor: colors.primary }]} onPress={onPressProtocol}>
+          <Text style={styles.protocolBtnText}>Open Protocol</Text>
+        </Pressable>
+      )}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   banner: {
+    borderRadius: 8,
     borderLeftWidth: 4,
-    borderRadius: 6,
-    padding: 10,
-    marginVertical: 4,
+    padding: 12,
+    marginBottom: 8,
   },
-  severity: { fontSize: 11, fontWeight: '800', marginBottom: 2 },
-  message: { fontSize: 14, color: '#111827', fontWeight: '500' },
-  value: { fontSize: 12, color: '#6b7280', marginTop: 2 },
+  severity: { fontSize: 12, fontWeight: '700', marginBottom: 2 },
+  message: { fontSize: 14, color: '#374151', fontWeight: '500', lineHeight: 20 },
+  value: { fontSize: 12, color: '#6b7280', marginTop: 4 },
+  protocolBtn: {
+    marginTop: 8,
+    borderRadius: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    alignSelf: 'flex-start',
+  },
+  protocolBtnText: { color: '#fff', fontSize: 12, fontWeight: '700' },
 });

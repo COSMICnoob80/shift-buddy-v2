@@ -1,9 +1,4 @@
-/**
- * PIN lock screen — shown on every cold start and after 5-min background.
- * First launch: setup flow (enter + confirm). Subsequent: unlock flow.
- */
-
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   AppState,
   AppStateStatus,
@@ -15,7 +10,9 @@ import {
 import { router } from 'expo-router';
 import { getDb } from '../lib/db';
 import { isPinSet, setupPin, verifyPin } from '../lib/pin';
+import { useTheme, Colors } from '../theme/ThemeProvider';
 
+type ThemeColors = typeof Colors.light;
 type Mode = 'loading' | 'setup_enter' | 'setup_confirm' | 'unlock';
 
 const BG_LOCK_MS = 5 * 60 * 1000;
@@ -26,6 +23,8 @@ export default function PinScreen() {
   const [firstPin, setFirstPin] = useState('');
   const [error, setError] = useState('');
   const bgTimestamp = useRef<number | null>(null);
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
 
   useEffect(() => {
     (async () => {
@@ -35,7 +34,6 @@ export default function PinScreen() {
     })();
   }, []);
 
-  // Re-lock after 5-min background
   useEffect(() => {
     const sub = AppState.addEventListener('change', (state: AppStateStatus) => {
       if (state === 'background') {
@@ -78,14 +76,13 @@ export default function PinScreen() {
           return;
         }
         await setupPin(next, db as unknown as import('../lib/pin').PinDb);
-        router.replace('/patients');
+        router.replace('/protocols');
         return;
       }
 
-      // unlock
       const ok = await verifyPin(next, db as unknown as import('../lib/pin').PinDb);
       if (ok) {
-        router.replace('/patients');
+        router.replace('/protocols');
       } else {
         setError('Incorrect PIN.');
         setDigits('');
@@ -102,36 +99,36 @@ export default function PinScreen() {
   if (mode === 'loading') {
     return (
       <View style={styles.container}>
-        <Text style={styles.title}>Shift Buddy</Text>
+        <Text style={{ fontSize: 28, fontWeight: '800', color: colors.primary }}>Doctor On Duty</Text>
+        <Text style={{ fontSize: 13, color: colors.icon, marginBottom: 24, textAlign: 'center', paddingHorizontal: 40 }}>
+          Clinical Protocols & Patient Tracker 2021
+        </Text>
       </View>
     );
   }
 
   const title =
-    mode === 'setup_enter'
-      ? 'Create PIN'
-      : mode === 'setup_confirm'
-        ? 'Confirm PIN'
-        : 'Enter PIN';
+    mode === 'setup_enter' ? 'Create PIN'
+    : mode === 'setup_confirm' ? 'Confirm PIN'
+    : 'Enter PIN';
 
   const subtitle =
-    mode === 'setup_enter'
-      ? 'Enter a 4-digit PIN to secure patient data.'
-      : mode === 'setup_confirm'
-        ? 'Re-enter your PIN to confirm.'
-        : 'Enter your PIN to continue.';
+    mode === 'setup_enter' ? 'Enter a 4-digit PIN to secure patient data.'
+    : mode === 'setup_confirm' ? 'Re-enter your PIN to confirm.'
+    : 'Enter your PIN to continue.';
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Shift Buddy</Text>
-      <Text style={styles.heading}>{title}</Text>
-      <Text style={styles.subtitle}>{subtitle}</Text>
+      <Text style={{ fontSize: 28, fontWeight: '800', color: colors.primary }}>Doctor On Duty</Text>
+
+      <Text style={[styles.heading, { color: colors.text }]}>{title}</Text>
+      <Text style={[styles.subtitle, { color: colors.icon }]}>{subtitle}</Text>
 
       <View style={styles.dotsRow}>
         {[0, 1, 2, 3].map((i) => (
           <View
             key={i}
-            style={[styles.dot, digits.length > i && styles.dotFilled]}
+            style={[styles.dot, { borderColor: colors.primary }, digits.length > i && { backgroundColor: colors.primary }]}
           />
         ))}
       </View>
@@ -142,14 +139,18 @@ export default function PinScreen() {
         {['1', '2', '3', '4', '5', '6', '7', '8', '9', '', '0', '⌫'].map((key) => (
           <Pressable
             key={key}
-            style={({ pressed }) => [styles.key, pressed && styles.keyPressed]}
+            style={({ pressed }) => [
+              styles.key,
+              { backgroundColor: colors.cardBackground },
+              pressed && { backgroundColor: colors.border },
+            ]}
             onPress={() => {
               if (key === '⌫') handleDelete();
               else if (key !== '') handleDigit(key);
             }}
             disabled={key === ''}
           >
-            <Text style={styles.keyText}>{key}</Text>
+            <Text style={[styles.keyText, { color: colors.text }]}>{key}</Text>
           </Pressable>
         ))}
       </View>
@@ -157,17 +158,16 @@ export default function PinScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center' },
-  title: { fontSize: 28, fontWeight: '800', color: '#0a7ea4', marginBottom: 24 },
-  heading: { fontSize: 22, fontWeight: '700', color: '#11181C', marginBottom: 6 },
-  subtitle: { fontSize: 14, color: '#687076', marginBottom: 32, textAlign: 'center', paddingHorizontal: 40 },
-  dotsRow: { flexDirection: 'row', gap: 16, marginBottom: 12 },
-  dot: { width: 18, height: 18, borderRadius: 9, borderWidth: 2, borderColor: '#0a7ea4', backgroundColor: 'transparent' },
-  dotFilled: { backgroundColor: '#0a7ea4' },
-  error: { color: '#dc2626', marginBottom: 12, fontSize: 14 },
-  pad: { flexDirection: 'row', flexWrap: 'wrap', width: 270, justifyContent: 'space-between', gap: 12, marginTop: 12 },
-  key: { width: 78, height: 78, borderRadius: 39, backgroundColor: '#f3f4f6', alignItems: 'center', justifyContent: 'center' },
-  keyPressed: { backgroundColor: '#e5e7eb' },
-  keyText: { fontSize: 26, fontWeight: '600', color: '#11181C' },
-});
+function createStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    container: { flex: 1, backgroundColor: colors.background, alignItems: 'center', justifyContent: 'center' },
+    heading: { fontSize: 22, fontWeight: '700', marginBottom: 6 },
+    subtitle: { fontSize: 14, marginBottom: 32, textAlign: 'center', paddingHorizontal: 40 },
+    dotsRow: { flexDirection: 'row', gap: 16, marginBottom: 12 },
+    dot: { width: 18, height: 18, borderRadius: 9, borderWidth: 2, backgroundColor: 'transparent' },
+    error: { color: colors.danger, marginBottom: 12, fontSize: 14 },
+    pad: { flexDirection: 'row', flexWrap: 'wrap', width: 270, justifyContent: 'space-between', gap: 12, marginTop: 12 },
+    key: { width: 78, height: 78, borderRadius: 39, alignItems: 'center', justifyContent: 'center' },
+    keyText: { fontSize: 26, fontWeight: '600' },
+  });
+}

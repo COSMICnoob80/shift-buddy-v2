@@ -55,7 +55,7 @@ describe('generateSummary', () => {
     expect(summary).toContain('HR 92');
     expect(summary).toContain('K+ 4.2');
     expect(summary).toContain('DKA moderate severity');
-    expect(summary).toContain('Sent via Shift Buddy');
+    expect(summary).toContain('Sent via Doctor On Duty 2021');
   });
 
   it('handles patient with no vitals or labs', async () => {

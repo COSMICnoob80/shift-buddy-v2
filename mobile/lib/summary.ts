@@ -61,6 +61,6 @@ export async function generateSummary(patientId: string, db: SQLiteDatabase): Pr
     `*Vitals:* ${vitalsLine}`,
     `*Labs:* ${labParts || '—'}`,
     `*⚠ Alert:* ${alertText}`,
-    `— Sent via Shift Buddy`,
+    `— Sent via Doctor On Duty 2021`,
   ].join('\n');
 }

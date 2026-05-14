@@ -28,10 +28,13 @@ function RootLayoutNav() {
         <Stack.Screen name="patients/[id]/vitals" options={{ title: 'Vitals', presentation: 'modal' }} />
         <Stack.Screen name="patients/[id]/labs" options={{ title: 'Labs', presentation: 'modal' }} />
         <Stack.Screen name="patients/[id]/camera" options={{ title: 'Camera', presentation: 'modal' }} />
+        <Stack.Screen name="patients/[id]/review" options={{ title: 'Review Data', presentation: 'modal' }} />
         <Stack.Screen name="protocols/index" options={{ title: 'Doctor On Duty' }} />
         <Stack.Screen name="protocols/[id]" options={{ title: 'Doctor On Duty 2021' }} />
         <Stack.Screen name="protocols/chapter/[chapterId]" options={{ title: 'Doctor On Duty' }} />
         <Stack.Screen name="protocols/calc/[type]" options={{ title: 'Calculator' }} />
+        <Stack.Screen name="protocols/calc/universal" options={{ title: 'Dose Calculator' }} />
+        <Stack.Screen name="patients/discharge" options={{ title: 'Discharge Patient', presentation: 'modal' }} />
         <Stack.Screen name="drugs/index" options={{ title: 'Drug Formulary' }} />
       </Stack>
       <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />

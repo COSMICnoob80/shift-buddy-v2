@@ -12,7 +12,39 @@ export async function getDb(): Promise<SQLiteDatabase> {
 
 export async function dischargePatient(id: string) {
   const db = await getDb();
-  await db.runAsync('UPDATE patients SET status = ?, discharge_date = ? WHERE id = ?', ['discharged', new Date().toISOString(), id]);
+  await db.runAsync(
+    'UPDATE patients SET status = ?, discharge_date = ?, updated_at = ? WHERE id = ?',
+    ['discharged', new Date().toISOString(), new Date().toISOString(), id],
+  );
+}
+
+export async function dischargeWithNotes(
+  id: string,
+  notes: string,
+  treatment: string,
+  followup: string,
+) {
+  const db = await getDb();
+  const now = new Date().toISOString();
+  await db.runAsync(
+    `UPDATE patients SET status = ?, discharge_date = ?, discharge_notes = ?,
+     discharge_treatment = ?, discharge_followup = ?, updated_at = ? WHERE id = ?`,
+    ['discharged', now, notes, treatment, followup, now, id],
+  );
+}
+
+export interface Patient {
+  id: string;
+  name: string;
+  bedNumber: string;
+  diagnosis: string;
+  acuity: string;
+  alertCount: number;
+  status: string;
+  discharge_date?: string;
+  discharge_notes?: string;
+  discharge_treatment?: string;
+  discharge_followup?: string;
 }
 
 // Placeholder for Patient interface - to be fully defined based on actual schema

@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   FlatList,
   Pressable,
@@ -11,6 +11,9 @@ import { router } from 'expo-router';
 import { SQLiteDatabase } from 'expo-sqlite';
 import { getDb } from '../../lib/db';
 import AlertBanner from '../../components/AlertBanner';
+import { useTheme, Colors } from '../../theme/ThemeProvider';
+
+type ThemeColors = typeof Colors.light;
 
 interface AlertRow {
   id: string;
@@ -42,6 +45,8 @@ export default function AlertsListScreen() {
   const [db, setDb] = useState<SQLiteDatabase | null>(null);
   const [alerts, setAlerts] = useState<AlertRow[]>([]);
   const [refreshing, setRefreshing] = useState(false);
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
 
   useEffect(() => {
     getDb().then(setDb);
@@ -87,8 +92,8 @@ export default function AlertsListScreen() {
         )}
         ListEmptyComponent={
           <View style={styles.empty}>
-            <Text style={styles.emptyText}>No active alerts.</Text>
-            <Text style={styles.emptyHint}>
+            <Text style={[styles.emptyText, { color: colors.textSecondary }]}>No active alerts.</Text>
+            <Text style={[styles.emptyHint, { color: colors.textTertiary }]}>
               Alerts appear when vitals or labs cross critical thresholds.
             </Text>
           </View>
@@ -102,10 +107,12 @@ export default function AlertsListScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f9fafb' },
-  list: { paddingVertical: 8, paddingBottom: 24 },
-  empty: { alignItems: 'center', marginTop: 80 },
-  emptyText: { fontSize: 16, color: '#6b7280', fontWeight: '600' },
-  emptyHint: { fontSize: 13, color: '#9ca3af', marginTop: 4 },
-});
+function createStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    container: { flex: 1, backgroundColor: colors.background },
+    list: { paddingVertical: 8, paddingBottom: 24 },
+    empty: { alignItems: 'center', marginTop: 80 },
+    emptyText: { fontSize: 16, fontWeight: '600' },
+    emptyHint: { fontSize: 13, marginTop: 4 },
+  });
+}

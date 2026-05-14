@@ -1,4 +1,8 @@
-/** SQLite schema — 5 tables per SPEC §3. */
+/**
+ * SQLite schema — 9 tables per SPEC §3 + book_sections table + drug table + FTS5.
+ * Tables: patients, vitals, lab_results, alerts, shadow_events, settings,
+ *          book_sections, book_fts, drugs, drugs_fts
+ */
 
 export const SCHEMA_SQL = `
 CREATE TABLE IF NOT EXISTS patients (
@@ -69,5 +73,47 @@ CREATE TABLE IF NOT EXISTS shadow_events (
 CREATE TABLE IF NOT EXISTS settings (
   key TEXT PRIMARY KEY,
   value TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS book_sections (
+  id TEXT PRIMARY KEY,
+  chapter_id TEXT NOT NULL,
+  chapter_number INTEGER NOT NULL,
+  chapter_title TEXT NOT NULL,
+  title TEXT NOT NULL,
+  content TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS drugs (
+  id TEXT PRIMARY KEY,
+  generic_name TEXT NOT NULL,
+  brand_names TEXT NOT NULL,
+  category TEXT NOT NULL,
+  subcategory TEXT,
+  route TEXT,
+  strengths TEXT,
+  chapter_ref TEXT,
+  is_paediatric INTEGER NOT NULL DEFAULT 0
+);
+`;
+
+/** FTS5 virtual table for full-text search across book content. */
+export const BOOK_FTS_SQL = `
+CREATE VIRTUAL TABLE IF NOT EXISTS book_fts USING fts5(
+  id UNINDEXED,
+  chapter_title,
+  title,
+  content,
+  tokenize='unicode61'
+);
+`;
+
+/** FTS5 virtual table for drug search. */
+export const DRUG_FTS_SQL = `
+CREATE VIRTUAL TABLE IF NOT EXISTS drugs_fts USING fts5(
+  generic_name,
+  brand_names,
+  category,
+  tokenize='unicode61'
 );
 `;
