@@ -46,16 +46,3 @@ export interface Patient {
   discharge_treatment?: string;
   discharge_followup?: string;
 }
-
-// Placeholder for Patient interface - to be fully defined based on actual schema
-// This will be needed when PatientCard and other components fetch patient data
-export interface Patient {
-  id: string;
-  name: string;
-  bedNumber: string;
-  diagnosis: string;
-  acuity: string; // Should match Acuity type from PatientCard.tsx
-  alertCount: number;
-  status: string; // e.g., 'active', 'discharged'
-  discharge_date?: string;
-}

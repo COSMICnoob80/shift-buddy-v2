@@ -127,6 +127,23 @@ function getProtocolResult(
   }
 }
 
+function getSeverityColors(severity: string, colors: ThemeColors): { bg: string; border: string; text: string } {
+  const mapping: Record<string, { bg: keyof ThemeColors; border: keyof ThemeColors; text: keyof ThemeColors }> = {
+    emergency: { bg: 'errorBg', border: 'danger', text: 'danger' },
+    emergency_ecg: { bg: 'errorBg', border: 'danger', text: 'danger' },
+    severe: { bg: 'errorBg', border: 'danger', text: 'danger' },
+    stage_3: { bg: 'errorBg', border: 'danger', text: 'danger' },
+    stage_2: { bg: 'warningBg', border: 'warning', text: 'warning' },
+    moderate: { bg: 'warningBg', border: 'warning', text: 'warning' },
+    stage_1: { bg: 'warningBg', border: 'warning', text: 'warning' },
+    mild: { bg: 'successBg', border: 'success', text: 'success' },
+    needs_abg: { bg: 'infoBg', border: 'info', text: 'info' },
+  };
+  const m = mapping[severity];
+  if (!m) return { bg: colors.cardBackground, border: colors.icon, text: colors.textSecondary };
+  return { bg: colors[m.bg], border: colors[m.border], text: colors[m.text] };
+}
+
 export default function PatientDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const [db, setDb] = useState<SQLiteDatabase | null>(null);
@@ -196,9 +213,9 @@ export default function PatientDetailScreen() {
 
       <View style={styles.actions}>
         <ActionBtn label="+ Vitals" color={colors.primary} onPress={() => router.push({ pathname: '/patients/[id]/vitals', params: { id } })} />
-        <ActionBtn label="+ Labs" color="#7c3aed" onPress={() => router.push({ pathname: '/patients/[id]/labs', params: { id } })} />
-        <ActionBtn label="Camera" color="#065f46" onPress={() => router.push({ pathname: '/patients/[id]/camera', params: { id } })} />
-        <ActionBtn label="Share" color="#92400e" onPress={handleShare} />
+        <ActionBtn label="+ Labs" color={colors.info} onPress={() => router.push({ pathname: '/patients/[id]/labs', params: { id } })} />
+        <ActionBtn label="Camera" color={colors.success} onPress={() => router.push({ pathname: '/patients/[id]/camera', params: { id } })} />
+        <ActionBtn label="Share" color={colors.warning} onPress={handleShare} />
       </View>
 
       <Pressable
@@ -293,20 +310,8 @@ function VitalCell({ label, value, unit, colors }: { label: string; value: numbe
   );
 }
 
-const SEVERITY_COLORS: Record<string, { bg: string; border: string; text: string }> = {
-  emergency: { bg: '#fef2f2', border: '#dc2626', text: '#dc2626' },
-  emergency_ecg: { bg: '#fef2f2', border: '#dc2626', text: '#dc2626' },
-  severe: { bg: '#fef2f2', border: '#dc2626', text: '#dc2626' },
-  stage_3: { bg: '#fef2f2', border: '#dc2626', text: '#dc2626' },
-  stage_2: { bg: '#fffbeb', border: '#d97706', text: '#d97706' },
-  moderate: { bg: '#fffbeb', border: '#d97706', text: '#d97706' },
-  stage_1: { bg: '#fffbeb', border: '#d97706', text: '#d97706' },
-  mild: { bg: '#f0fdf4', border: '#16a34a', text: '#16a34a' },
-  needs_abg: { bg: '#f0f9ff', border: '#0284c7', text: '#0284c7' },
-};
-
 function ProtocolActions({ result, parameter, value, unit, colors }: { result: ProtocolResult; parameter: string; value: number; unit: string | null; colors: ThemeColors }) {
-  const sevColors = SEVERITY_COLORS[result.severity] ?? { bg: colors.cardBackground, border: colors.icon, text: colors.textSecondary };
+  const sevColors = getSeverityColors(result.severity, colors);
   const paramLabel = parameter === 'K+' ? 'HYPERKALEMIA' : parameter === 'blood_sugar' ? 'DKA' : parameter === 'creatinine' ? 'AKI' : parameter.toUpperCase();
   const source = result.recommendations[0]?.source ?? 'Doctor On Duty 2021';
 
@@ -329,8 +334,8 @@ function ProtocolActions({ result, parameter, value, unit, colors }: { result: P
       {result.escalation && (
         <>
           <Text style={[s_sectionHeading, { color: colors.textSecondary, marginTop: 8 }]}>ESCALATE:</Text>
-          <View style={{ backgroundColor: '#fef2f2', borderRadius: 6, padding: 10, borderWidth: 1, borderColor: '#fecaca' }}>
-            <Text style={{ fontSize: 13, color: '#dc2626', fontWeight: '600', lineHeight: 18 }}>{result.escalation}</Text>
+          <View style={{ backgroundColor: colors.errorBg, borderRadius: 6, padding: 10, borderWidth: 1, borderColor: colors.danger }}>
+            <Text style={{ fontSize: 13, color: colors.danger, fontWeight: '600', lineHeight: 18 }}>{result.escalation}</Text>
           </View>
         </>
       )}

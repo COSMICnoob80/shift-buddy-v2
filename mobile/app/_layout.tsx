@@ -1,13 +1,31 @@
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, useColorScheme } from 'react-native';
 import OfflineIndicator from '../components/OfflineIndicator';
-import { ThemeProvider, useTheme } from '../theme/ThemeProvider';
+import { ThemeProvider, useTheme, setPreferredThemeCallback, ThemeMode } from '../theme/ThemeProvider';
+import { getDb } from '../lib/db';
+
+setPreferredThemeCallback(async () => {
+  try {
+    const db = await getDb();
+    const row = await db.getFirstAsync<{ value: string }>(
+      "SELECT value FROM settings WHERE key = 'theme_mode'",
+    );
+    const val = row?.value as ThemeMode | undefined;
+    if (val && ['light', 'dark', 'auto'].includes(val)) return val;
+  } catch {
+    // DB not ready yet, fall through to auto
+  }
+  return 'auto';
+});
 
 function RootLayoutNav() {
   const { colors, colorScheme } = useTheme();
+  const systemColorScheme = useColorScheme();
+  const statusBarContent = colorScheme === 'dark' || (colorScheme === 'auto' && systemColorScheme === 'dark') ? 'light' : 'dark';
+
   return (
-    <>
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
       <Stack
         screenOptions={{
           headerBackTitle: '',
@@ -36,9 +54,10 @@ function RootLayoutNav() {
         <Stack.Screen name="protocols/calc/universal" options={{ title: 'Dose Calculator' }} />
         <Stack.Screen name="patients/discharge" options={{ title: 'Discharge Patient', presentation: 'modal' }} />
         <Stack.Screen name="drugs/index" options={{ title: 'Drug Formulary' }} />
+        <Stack.Screen name="settings" options={{ title: 'Settings' }} />
       </Stack>
-      <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
-    </>
+      <StatusBar style={statusBarContent} />
+    </View>
   );
 }
 

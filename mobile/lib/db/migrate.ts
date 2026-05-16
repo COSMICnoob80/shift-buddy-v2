@@ -15,6 +15,15 @@ export async function runMigrations(db: SQLiteDatabase): Promise<void> {
     }
   }
 
+  // v0.5.2 — settings table for user preferences
+  try {
+    await db.execAsync(
+      'CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT NOT NULL)',
+    );
+  } catch {
+    // table already exists
+  }
+
   // Create FTS5 virtual tables (gracefully handle missing FTS5 support)
   try {
     await db.execAsync(BOOK_FTS_SQL);

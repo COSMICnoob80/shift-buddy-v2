@@ -101,7 +101,7 @@ export default function AddPatientScreen() {
       } else {
         const newId = Crypto.randomUUID();
         await db.runAsync(
-          `INSERT INTO patients (id,name,bed_number,diagnosis,age,sex,acuity,ward,current_medications,status,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,'admitted',?,?)`,
+          `INSERT INTO patients (id,name,bed_number,diagnosis,age,sex,acuity,ward,current_medications,status,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,'active',?,?)`,
           [newId, form.name.trim(), form.bedNumber.trim(), form.diagnosis.trim(),
            form.age ? parseInt(form.age, 10) : null, form.sex, form.acuity,
            form.ward.trim() || null, form.medications.trim() || null, now, now],
@@ -204,6 +204,6 @@ function createStyles(colors: ThemeColors) {
     pill: { borderWidth: 1, borderRadius: 20, paddingHorizontal: 14, paddingVertical: 6 },
     pillText: { fontSize: 13 },
     saveBtn: { marginTop: 28, borderRadius: 10, paddingVertical: 14, alignItems: 'center' },
-    saveBtnText: { color: '#fff', fontSize: 16, fontWeight: '700' },
+    saveBtnText: { color: colors.background, fontSize: 16, fontWeight: '700' },
   });
 }

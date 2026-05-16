@@ -10,7 +10,6 @@ import {
 } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import * as Crypto from 'expo-crypto';
-import { SQLiteDatabase } from 'expo-sqlite';
 import { getDb } from '../../../lib/db';
 import { useTheme, Colors } from '../../../theme/ThemeProvider';
 
@@ -139,12 +138,12 @@ function createStyles(colors: ThemeColors) {
     unitInput: { flex: 1.5 },
     removeBtn: {
       width: 32, height: 32, borderRadius: 16,
-      backgroundColor: '#fef2f2', alignItems: 'center', justifyContent: 'center',
+      backgroundColor: colors.errorBg, alignItems: 'center', justifyContent: 'center',
     },
-    removeBtnText: { color: '#dc2626', fontWeight: '700', fontSize: 14 },
+    removeBtnText: { color: colors.danger, fontWeight: '700', fontSize: 14 },
     addBtn: { borderWidth: 1, borderRadius: 8, borderStyle: 'dashed', padding: 12, alignItems: 'center', marginBottom: 20 },
     addBtnText: { fontSize: 14, fontWeight: '600' },
     saveBtn: { borderRadius: 10, paddingVertical: 14, alignItems: 'center' },
-    saveBtnText: { color: '#fff', fontSize: 16, fontWeight: '700' },
+    saveBtnText: { color: colors.background, fontSize: 16, fontWeight: '700' },
   });
 }

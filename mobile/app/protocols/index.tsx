@@ -12,9 +12,7 @@ import { router } from 'expo-router';
 import { SQLiteDatabase } from 'expo-sqlite';
 import { getDb } from '../../lib/db';
 import { searchBook, getChapterIndex, SearchResult } from '../../lib/book';
-import { useTheme, Colors } from '../../theme/ThemeProvider';
-
-type ThemeColors = typeof Colors.light;
+import { useTheme } from '../../theme/ThemeProvider';
 
 type ChapterRow = {
   chapterId: string;
@@ -91,16 +89,22 @@ export default function ProtocolListScreen() {
         </View>
         <View style={styles.headerButtons}>
           <Pressable
+            style={[styles.settingsBtn, { backgroundColor: colors.icon + '30' }]}
+            onPress={() => router.push('/settings')}
+          >
+            <Text style={[styles.settingsBtnText, { color: colors.text }]}>⚙</Text>
+          </Pressable>
+          <Pressable
             style={[styles.patientsBtn, { backgroundColor: colors.primary }]}
             onPress={() => router.push('/patients')}
           >
             <Text style={styles.patientsBtnText}>Patients</Text>
           </Pressable>
           <Pressable
-            style={{ backgroundColor: '#065f46', borderRadius: 8, paddingHorizontal: 14, paddingVertical: 8, marginTop: 4 }}
+            style={[styles.drugsBtn, { backgroundColor: colors.success }]}
             onPress={() => router.push('/drugs')}
           >
-            <Text style={{ color: '#fff', fontWeight: '700', fontSize: 13 }}>Drugs</Text>
+            <Text style={styles.drugsBtnText}>Drugs</Text>
           </Pressable>
         </View>
       </View>
@@ -202,7 +206,11 @@ function createStyles(colors: ThemeColors) {
     loadingTitle: { fontSize: 24, fontWeight: '800', marginTop: 16 },
     patientsBtn: { borderRadius: 8, paddingHorizontal: 14, paddingVertical: 8, marginTop: 4 },
     patientsBtnText: { color: '#fff', fontWeight: '700', fontSize: 13 },
+    drugsBtn: { borderRadius: 8, paddingHorizontal: 14, paddingVertical: 8, marginTop: 4 },
+    drugsBtnText: { color: '#fff', fontWeight: '700', fontSize: 13 },
     headerButtons: { flexDirection: 'row', gap: 8 },
+    settingsBtn: { borderRadius: 8, width: 36, height: 36, alignItems: 'center', justifyContent: 'center', marginTop: 4 },
+    settingsBtnText: { fontSize: 18 },
     search: {
       marginHorizontal: 16,
       marginBottom: 8,

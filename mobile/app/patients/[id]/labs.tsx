@@ -5,7 +5,7 @@
  * AC: K+ 6.2 → critical alert + protocol link shown immediately.
  */
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   Alert,
   KeyboardAvoidingView,
@@ -23,6 +23,9 @@ import { SQLiteDatabase } from 'expo-sqlite';
 import { getDb } from '../../../lib/db';
 import { isLabCritical } from '../../../lib/is_critical';
 import { evaluateAki } from '../../../lib/protocols/aki_staging';
+import { useTheme, Colors } from '../../../theme/ThemeProvider';
+
+type ThemeColors = typeof Colors.light;
 
 interface LabOption { name: string; unit: string; defaultUnit: string }
 
@@ -44,6 +47,8 @@ export default function LabsScreen() {
   const [selectedTest, setSelectedTest] = useState(LAB_OPTIONS[0].name);
   const [value, setValue] = useState('');
   const [saving, setSaving] = useState(false);
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
 
   useEffect(() => { getDb().then(setDb); }, []);
 
@@ -59,17 +64,17 @@ export default function LabsScreen() {
     setSaving(true);
     const now = new Date().toISOString();
     const labId = Crypto.randomUUID();
-    const critical = isLabCritical(selectedTest, num);
+    const criticalResult = isLabCritical(selectedTest, num);
 
     try {
       await db.runAsync(
         'INSERT INTO lab_results (id, patient_id, test_name, value, unit, is_critical, recorded_at) VALUES (?, ?, ?, ?, ?, ?, ?)',
-        [labId, id, selectedTest, num, currentOption.unit, critical ? 1 : 0, now],
+        [labId, id, selectedTest, num, currentOption.unit, criticalResult ? 1 : 0, now],
       );
 
-      if (critical) {
+      if (criticalResult) {
         const alertId = Crypto.randomUUID();
-        const message = `🔴 CRITICAL: ${selectedTest} = ${num} ${currentOption.unit}`;
+        const message = criticalResult.instruction;
         await db.runAsync(
           `INSERT INTO alerts (id, patient_id, severity, parameter, value, unit, message, acknowledged, created_at)
            VALUES (?, ?, 'critical', ?, ?, ?, ?, 0, ?)`,
@@ -77,7 +82,6 @@ export default function LabsScreen() {
         );
       }
 
-      // AKI evaluation for Creatinine
       if (selectedTest === 'Creatinine') {
         const akiResult = evaluateAki(num, id, new Date(now), db);
         if (akiResult.alertGenerated && akiResult.severity !== 'insufficient_data') {
@@ -105,13 +109,16 @@ export default function LabsScreen() {
           {LAB_OPTIONS.map((o) => (
             <Pressable
               key={o.name}
-              style={[styles.testPill, selectedTest === o.name && styles.testPillActive]}
+              style={[
+                styles.testPill,
+                selectedTest === o.name && { borderColor: colors.primary, backgroundColor: colors.primary + '15' }
+              ]}
               onPress={() => {
                 setSelectedTest(o.name);
                 setValue('');
               }}
             >
-              <Text style={[styles.testPillText, selectedTest === o.name && styles.testPillTextActive]}>
+              <Text style={[styles.testPillText, selectedTest === o.name && { color: colors.primary, fontWeight: '700' }]}>
                 {o.name}
               </Text>
             </Pressable>
@@ -125,12 +132,12 @@ export default function LabsScreen() {
           onChangeText={setValue}
           keyboardType="decimal-pad"
           placeholder={`Enter ${selectedTest} value`}
-          placeholderTextColor="#9ca3af"
+          placeholderTextColor={colors.textTertiary}
           autoFocus
         />
 
         <Pressable
-          style={({ pressed }) => [styles.saveBtn, pressed && { opacity: 0.8 }, saving && styles.disabled]}
+          style={({ pressed }) => [styles.saveBtn, { backgroundColor: colors.primary }, pressed && { opacity: 0.8 }, saving && styles.disabled]}
           onPress={handleSave}
           disabled={saving}
         >
@@ -141,24 +148,25 @@ export default function LabsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff' },
-  content: { padding: 16, paddingBottom: 40 },
-  sectionLabel: { fontSize: 13, fontWeight: '600', color: '#374151', marginBottom: 10, marginTop: 16 },
-  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 8 },
-  testPill: {
-    borderWidth: 1, borderColor: '#d1d5db', borderRadius: 20,
-    paddingHorizontal: 14, paddingVertical: 7,
-  },
-  testPillActive: { borderColor: '#7c3aed', backgroundColor: '#f5f3ff' },
-  testPillText: { fontSize: 13, color: '#374151' },
-  testPillTextActive: { color: '#7c3aed', fontWeight: '700' },
-  input: {
-    borderWidth: 1, borderColor: '#e5e7eb', borderRadius: 8,
-    paddingHorizontal: 12, paddingVertical: 12, fontSize: 24,
-    color: '#111827', backgroundColor: '#fafafa', textAlign: 'center',
-  },
-  saveBtn: { marginTop: 28, backgroundColor: '#7c3aed', borderRadius: 10, paddingVertical: 14, alignItems: 'center' },
-  disabled: { opacity: 0.6 },
-  saveBtnText: { color: '#fff', fontSize: 16, fontWeight: '700' },
-});
+function createStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    container: { flex: 1, backgroundColor: colors.background },
+    content: { padding: 16, paddingBottom: 40 },
+    sectionLabel: { fontSize: 13, fontWeight: '600', marginBottom: 10, marginTop: 16, color: colors.textSecondary },
+    grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 8 },
+    testPill: {
+      borderWidth: 1, borderColor: colors.border, borderRadius: 20,
+      paddingHorizontal: 14, paddingVertical: 7,
+    },
+    testPillText: { fontSize: 13, color: colors.textSecondary },
+    input: {
+      borderWidth: 1, borderRadius: 8,
+      paddingHorizontal: 12, paddingVertical: 12, fontSize: 24,
+      textAlign: 'center',
+      color: colors.text, backgroundColor: colors.inputBackground, borderColor: colors.inputBorder,
+    },
+    saveBtn: { marginTop: 28, borderRadius: 10, paddingVertical: 14, alignItems: 'center' },
+    disabled: { opacity: 0.6 },
+    saveBtnText: { color: colors.background, fontSize: 16, fontWeight: '700' },
+  });
+}

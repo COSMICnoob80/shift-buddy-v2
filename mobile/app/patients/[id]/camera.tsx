@@ -1,10 +1,13 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { File, Paths } from 'expo-file-system';
 import { router, useLocalSearchParams } from 'expo-router';
 import { SQLiteDatabase } from 'expo-sqlite';
 import { getDb } from '../../../lib/db';
+import { useTheme, Colors } from '../../../theme/ThemeProvider';
+
+type ThemeColors = typeof Colors.light;
 
 interface ExtractedValue {
   param: string;
@@ -12,7 +15,7 @@ interface ExtractedValue {
   unit: string;
 }
 
-function mockExtract(text: string): ExtractedValue[] {
+function mockExtract(photoUri: string, text: string): ExtractedValue[] {
   const results: ExtractedValue[] = [];
 
   const hbMatch = text.match(/\b[Hh][Bb]\s*[:\s]\s*(\d+\.?\d*)/);
@@ -33,6 +36,27 @@ function mockExtract(text: string): ExtractedValue[] {
   const bsMatch = text.match(/\b[Rr][Bb][Ss]\s*[:\s]\s*(\d+\.?\d*)/);
   if (bsMatch) results.push({ param: 'Blood Sugar', value: parseFloat(bsMatch[1]), unit: 'mg/dL' });
 
+  const wbcMatch = text.match(/\b[Ww][Bb][Cc]\s*[:\s]\s*(\d+\.?\d*)/);
+  if (wbcMatch) results.push({ param: 'WBC', value: parseFloat(wbcMatch[1]), unit: '×10⁹/L' });
+
+  const rbcMatch = text.match(/\b[Rr][Bb][Cc]\s*[:\s]\s*(\d+\.?\d*)/);
+  if (rbcMatch) results.push({ param: 'RBC', value: parseFloat(rbcMatch[1]), unit: '×10¹²/L' });
+
+  const pltMatch = text.match(/\b(?:[Pp]latelets|[Pp][Ll][Tt])\s*[:\s]\s*(\d+\.?\d*)/);
+  if (pltMatch) results.push({ param: 'Platelets', value: parseFloat(pltMatch[1]), unit: '×10⁹/L' });
+
+  const neutMatch = text.match(/\b[Nn]eutrophils?\s*[:\s]\s*(\d+\.?\d*)/);
+  if (neutMatch) results.push({ param: 'Neutrophils', value: parseFloat(neutMatch[1]), unit: '%' });
+
+  const lymphMatch = text.match(/\b[Ll]ymphocytes?\s*[:\s]\s*(\d+\.?\d*)/);
+  if (lymphMatch) results.push({ param: 'Lymphocytes', value: parseFloat(lymphMatch[1]), unit: '%' });
+
+  const ureaMatch = text.match(/\b[Uu]rea\s*[:\s]\s*(\d+\.?\d*)/);
+  if (ureaMatch) results.push({ param: 'Urea', value: parseFloat(ureaMatch[1]), unit: 'mg/dL' });
+
+  const biliMatch = text.match(/\b[Bb]ilirubin\s*[:\s]\s*(\d+\.?\d*)/);
+  if (biliMatch) results.push({ param: 'Bilirubin', value: parseFloat(biliMatch[1]), unit: 'mg/dL' });
+
   return results;
 }
 
@@ -44,18 +68,20 @@ export default function CameraScreen() {
   const [photoUri, setPhotoUri] = useState<string | null>(null);
   const [extracted, setExtracted] = useState<ExtractedValue[]>([]);
   const cameraRef = useRef<CameraView>(null);
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
 
   useEffect(() => { getDb().then(setDb); }, []);
 
   if (!permission) {
-    return <View style={styles.center}><Text>Checking camera permission…</Text></View>;
+    return <View style={[styles.center, { backgroundColor: colors.background }]}><Text style={{ color: colors.text }}>Checking camera permission…</Text></View>;
   }
 
   if (!permission.granted) {
     return (
-      <View style={styles.center}>
+      <View style={[styles.center, { backgroundColor: colors.background }]}>
         <Text style={styles.permText}>Camera access is needed to photograph patient files.</Text>
-        <Pressable style={styles.btn} onPress={requestPermission}>
+        <Pressable style={[styles.btn, { backgroundColor: colors.primary }]} onPress={requestPermission}>
           <Text style={styles.btnText}>Grant Camera Access</Text>
         </Pressable>
       </View>
@@ -77,7 +103,7 @@ export default function CameraScreen() {
       );
       Alert.alert('Photo saved', 'Patient file photo attached.', [
         { text: 'Done', onPress: () => router.back() },
-        { text: 'Extract Data', onPress: () => handleExtract() },
+        { text: 'Extract Data', onPress: () => handleExtract(dest.uri) },
         { text: 'Take another', style: 'cancel' },
       ]);
     } catch (err) {
@@ -87,9 +113,9 @@ export default function CameraScreen() {
     }
   }
 
-  function handleExtract() {
+  function handleExtract(uri: string) {
     const mockText = 'Hb: 10.5, K+ 4.2, BP: 130/85, Cr 0.9, RBS 140';
-    const values = mockExtract(mockText);
+    const values = mockExtract(uri, mockText);
     setExtracted(values);
     if (values.length > 0) {
       router.push(
@@ -103,19 +129,24 @@ export default function CameraScreen() {
   return (
     <View style={styles.container}>
       {photoUri ? (
-        <View style={styles.center}>
-          <Text style={{ fontSize: 16, color: '#374151', marginBottom: 16 }}>Photo captured successfully</Text>
+        <View style={[styles.center, { backgroundColor: colors.background }]}>
+          <Text style={[styles.photoText, { color: colors.text }]}>Photo captured successfully</Text>
           {extracted.length > 0 && (
-            <View style={{ marginBottom: 16 }}>
-              <Text style={{ fontWeight: '700', marginBottom: 8 }}>Extracted Values:</Text>
+            <View style={styles.extractedSection}>
+              <Text style={[styles.extractedTitle, { color: colors.text }]}>Extracted Values:</Text>
               {extracted.map((e, i) => (
-                <Text key={i}>{e.param}: {e.value} {e.unit}</Text>
+                <Text key={i} style={{ color: colors.textSecondary }}>{e.param}: {e.value} {e.unit}</Text>
               ))}
             </View>
           )}
-          <Pressable style={[styles.btn, { backgroundColor: '#0a7ea4' }]} onPress={() => router.back()}>
-            <Text style={styles.btnText}>Done</Text>
-          </Pressable>
+          <View style={styles.buttonRow}>
+            <Pressable style={[styles.btn, { backgroundColor: colors.primary }]} onPress={() => handleExtract(photoUri)}>
+              <Text style={styles.btnText}>Extract Data</Text>
+            </Pressable>
+            <Pressable style={[styles.btn, { backgroundColor: colors.primary }]} onPress={() => router.back()}>
+              <Text style={styles.btnText}>Done</Text>
+            </Pressable>
+          </View>
         </View>
       ) : (
         <CameraView style={styles.camera} ref={cameraRef} facing="back">
@@ -138,18 +169,24 @@ export default function CameraScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#000' },
-  camera: { flex: 1 },
-  center: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#fff', padding: 24 },
-  permText: { textAlign: 'center', marginBottom: 16, color: '#374151', fontSize: 15 },
-  btn: { borderRadius: 8, paddingHorizontal: 20, paddingVertical: 12, marginTop: 8 },
-  btnText: { color: '#fff', fontWeight: '700', fontSize: 15 },
-  overlay: { flex: 1, justifyContent: 'flex-end', alignItems: 'center', paddingBottom: 60 },
-  overlayHint: { color: '#fff', fontSize: 14, marginBottom: 24, backgroundColor: '#00000080', paddingHorizontal: 16, paddingVertical: 8, borderRadius: 8 },
-  shutter: { width: 72, height: 72, borderRadius: 36, borderWidth: 4, borderColor: '#fff', alignItems: 'center', justifyContent: 'center', marginBottom: 24 },
-  shutterInner: { width: 56, height: 56, borderRadius: 28, backgroundColor: '#fff', opacity: 0.9 },
-  shutterDisabled: { opacity: 0.4 },
-  cancelBtn: { paddingVertical: 12, paddingHorizontal: 20 },
-  cancelText: { color: '#fff', fontSize: 16 },
-});
+function createStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    container: { flex: 1, backgroundColor: '#000' },
+    camera: { flex: 1 },
+    center: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 },
+    photoText: { fontSize: 16, marginBottom: 16 },
+    extractedSection: { marginBottom: 16 },
+    extractedTitle: { fontWeight: '700', marginBottom: 8 },
+    buttonRow: { flexDirection: 'row', gap: 12 },
+    permText: { textAlign: 'center', marginBottom: 16, fontSize: 15 },
+    btn: { borderRadius: 8, paddingHorizontal: 20, paddingVertical: 12, marginTop: 8 },
+    btnText: { color: colors.background, fontWeight: '700', fontSize: 15 },
+    overlay: { flex: 1, justifyContent: 'flex-end', alignItems: 'center', paddingBottom: 60 },
+    overlayHint: { color: '#fff', fontSize: 14, marginBottom: 24, backgroundColor: '#00000080', paddingHorizontal: 16, paddingVertical: 8, borderRadius: 8 },
+    shutter: { width: 72, height: 72, borderRadius: 36, borderWidth: 4, borderColor: '#fff', alignItems: 'center', justifyContent: 'center', marginBottom: 24 },
+    shutterInner: { width: 56, height: 56, borderRadius: 28, backgroundColor: '#fff', opacity: 0.9 },
+    shutterDisabled: { opacity: 0.4 },
+    cancelBtn: { paddingVertical: 12, paddingHorizontal: 20 },
+    cancelText: { color: '#fff', fontSize: 16 },
+  });
+}

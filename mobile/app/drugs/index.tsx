@@ -123,7 +123,7 @@ export default function DrugListScreen() {
               <Text style={[
                 styles.chipText,
                 { color: colors.text },
-                activeCategory === cat && { color: '#fff' },
+                activeCategory === cat && { color: colors.background },
               ]}>{cat}</Text>
             </Pressable>
           ))}
@@ -161,7 +161,7 @@ export default function DrugListScreen() {
                   <Text style={{ fontSize: 11, color: colors.textTertiary }}>{item.route}</Text>
                 )}
                 {item.isPaediatric ? (
-                  <Text style={{ fontSize: 11, fontWeight: '600', color: '#065f46', backgroundColor: '#d1fae5', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4, overflow: 'hidden' }}>Peds</Text>
+                  <Text style={{ fontSize: 11, fontWeight: '600', color: colors.success, backgroundColor: colors.successBg, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4, overflow: 'hidden' }}>Peds</Text>
                 ) : null}
               </View>
             </Pressable>

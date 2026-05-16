@@ -4,7 +4,7 @@
  * AC: HR 135 → critical alert row created immediately.
  */
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   Alert,
   KeyboardAvoidingView,
@@ -21,6 +21,9 @@ import * as Crypto from 'expo-crypto';
 import { SQLiteDatabase } from 'expo-sqlite';
 import { getDb } from '../../../lib/db';
 import { isVitalCritical } from '../../../lib/is_critical';
+import { useTheme, Colors } from '../../../theme/ThemeProvider';
+
+type ThemeColors = typeof Colors.light;
 
 interface VitalField {
   key: string;
@@ -73,6 +76,8 @@ export default function VitalsScreen() {
   const [db, setDb] = useState<SQLiteDatabase | null>(null);
   const [values, setValues] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
 
   useEffect(() => { getDb().then(setDb); }, []);
 
@@ -104,7 +109,6 @@ export default function VitalsScreen() {
       const placeholders = cols.map(() => '?').join(', ');
       await db.runAsync(`INSERT INTO vitals (${cols.join(', ')}) VALUES (${placeholders})`, params);
 
-      // generate alerts for critical/warning vitals
       for (const f of VITAL_FIELDS) {
         const raw = values[f.key]?.trim();
         if (!raw) continue;
@@ -138,7 +142,7 @@ export default function VitalsScreen() {
               onChangeText={(v) => setVal(f.key, v)}
               keyboardType={f.decimal ? 'decimal-pad' : 'number-pad'}
               placeholder="—"
-              placeholderTextColor="#9ca3af"
+              placeholderTextColor={colors.textTertiary}
             />
           </View>
         ))}
@@ -154,19 +158,21 @@ export default function VitalsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff' },
-  content: { padding: 16, paddingBottom: 40 },
-  hint: { fontSize: 13, color: '#6b7280', marginBottom: 16 },
-  fieldRow: { marginBottom: 14 },
-  label: { fontSize: 14, fontWeight: '600', color: '#374151', marginBottom: 4 },
-  unit: { fontWeight: '400', color: '#9ca3af' },
-  input: {
-    borderWidth: 1, borderColor: '#e5e7eb', borderRadius: 8,
-    paddingHorizontal: 12, paddingVertical: 10, fontSize: 18,
-    color: '#111827', backgroundColor: '#fafafa',
-  },
-  saveBtn: { marginTop: 20, backgroundColor: '#0a7ea4', borderRadius: 10, paddingVertical: 14, alignItems: 'center' },
-  disabled: { opacity: 0.6 },
-  saveBtnText: { color: '#fff', fontSize: 16, fontWeight: '700' },
-});
+function createStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    container: { flex: 1, backgroundColor: colors.background },
+    content: { padding: 16, paddingBottom: 40 },
+    hint: { fontSize: 13, color: colors.textSecondary, marginBottom: 16 },
+    fieldRow: { marginBottom: 14 },
+    label: { fontSize: 14, fontWeight: '600', color: colors.text, marginBottom: 4 },
+    unit: { fontWeight: '400', color: colors.textTertiary },
+    input: {
+      borderWidth: 1, borderColor: colors.border, borderRadius: 8,
+      paddingHorizontal: 12, paddingVertical: 10, fontSize: 18,
+      color: colors.text, backgroundColor: colors.inputBackground,
+    },
+    saveBtn: { marginTop: 20, backgroundColor: colors.primary, borderRadius: 10, paddingVertical: 14, alignItems: 'center' },
+    disabled: { opacity: 0.6 },
+    saveBtnText: { color: colors.background, fontSize: 16, fontWeight: '700' },
+  });
+}
