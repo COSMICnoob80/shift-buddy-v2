@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
+  ActivityIndicator,
   FlatList,
   Pressable,
   RefreshControl,
@@ -47,6 +48,7 @@ async function loadPatients(db: SQLiteDatabase): Promise<PatientRow[]> {
 
 export default function PatientListScreen() {
   const [db, setDb] = useState<SQLiteDatabase | null>(null);
+  const [dbReady, setDbReady] = useState(false);
   const [patients, setPatients] = useState<PatientRow[]>([]);
   const [refreshing, setRefreshing] = useState(false);
   const { colors } = useTheme();
@@ -54,7 +56,14 @@ export default function PatientListScreen() {
   const styles = useMemo(() => createStyles(colors), [colors]);
 
   useEffect(() => {
-    getDb().then(setDb);
+    getDb()
+      .then((database) => {
+        setDb(database);
+        setDbReady(true);
+      })
+      .catch(() => {
+        setDbReady(true);
+      });
   }, []);
 
   const refresh = useCallback(async () => {
@@ -69,22 +78,32 @@ export default function PatientListScreen() {
     if (db) refresh();
   }, [db, refresh]);
 
+  if (!dbReady) {
+    return (
+      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+        <ActivityIndicator size="large" color={colors.primary} />
+      </View>
+    );
+  }
+
+  const headerComponent = () => (
+    <View style={styles.headerBar}>
+      <Text style={styles.headerTitle}>My Patients</Text>
+      <Pressable
+        style={styles.drugBtn}
+        onPress={() => router.push('/drugs')}
+      >
+        <Text style={styles.drugBtnText}>Drugs</Text>
+      </Pressable>
+    </View>
+  );
+
   return (
     <View style={styles.container}>
-<FlatList
+      <FlatList
         data={patients}
         keyExtractor={(p) => p.id}
-        ListHeaderComponent={
-          <View style={styles.headerBar}>
-            <Text style={styles.headerTitle}>My Patients</Text>
-            <Pressable
-              style={styles.drugBtn}
-              onPress={() => router.push('/drugs')}
-            >
-              <Text style={styles.drugBtnText}>Drugs</Text>
-            </Pressable>
-          </View>
-        }
+        ListHeaderComponent={headerComponent}
         renderItem={({ item }) => (
           <PatientCard
             id={item.id}

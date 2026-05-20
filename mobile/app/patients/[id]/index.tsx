@@ -283,7 +283,7 @@ export default function PatientDetailScreen() {
 
 function Section({ title, children, colors }: { title: string; children: React.ReactNode; colors: ThemeColors }) {
   return (
-    <View style={[s_section, { backgroundColor: colors.surface }]}>
+    <View style={[s_section, { backgroundColor: colors.surface, shadowColor: colors.text }]}>
       <Text style={[s_sectionTitle, { color: colors.textSecondary }]}>{title}</Text>
       {children}
     </View>
@@ -291,12 +291,13 @@ function Section({ title, children, colors }: { title: string; children: React.R
 }
 
 function ActionBtn({ label, color, onPress }: { label: string; color: string; onPress: () => void }) {
+  const { colors } = useTheme();
   return (
     <Pressable
       style={({ pressed }) => [s_actionBtn, { backgroundColor: color }, pressed && { opacity: 0.8 }]}
       onPress={onPress}
     >
-      <Text style={s_actionBtnText}>{label}</Text>
+      <Text style={[s_actionBtnText, { color: colors.background }]}>{label}</Text>
     </Pressable>
   );
 }
@@ -304,7 +305,7 @@ function ActionBtn({ label, color, onPress }: { label: string; color: string; on
 function VitalCell({ label, value, unit, colors }: { label: string; value: number | null; unit: string; colors: ThemeColors }) {
   return (
     <View style={[s_vitalCell, { backgroundColor: colors.cardBackground }]}>
-      <Text style={s_vitalLabel}>{label}</Text>
+      <Text style={[s_vitalLabel, { color: colors.textSecondary }]}>{label}</Text>
       <Text style={[s_vitalValue, { color: colors.text }]}>{value != null ? `${value}${unit}` : '—'}</Text>
     </View>
   );
@@ -347,13 +348,13 @@ function ProtocolActions({ result, parameter, value, unit, colors }: { result: P
 
 const s_section: any = {
   borderRadius: 10, padding: 14, marginBottom: 12, elevation: 1,
-  shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 4, shadowOffset: { width: 0, height: 2 },
+  shadowOpacity: 0.1, shadowRadius: 4, shadowOffset: { width: 0, height: 2 },
 };
 const s_sectionTitle: any = { fontSize: 14, fontWeight: '700', marginBottom: 10 };
 const s_actionBtn: any = { borderRadius: 8, paddingHorizontal: 14, paddingVertical: 10, flexGrow: 1 };
-const s_actionBtnText: any = { color: '#fff', fontWeight: '700', fontSize: 13, textAlign: 'center' };
+const s_actionBtnText: any = { fontWeight: '700', fontSize: 13, textAlign: 'center' };
 const s_vitalCell: any = { width: '30%', borderRadius: 8, padding: 10, alignItems: 'center' };
-const s_vitalLabel: any = { fontSize: 11, color: '#6b7280', fontWeight: '600' };
+const s_vitalLabel: any = { fontSize: 11, fontWeight: '600' };
 const s_vitalValue: any = { fontSize: 15, fontWeight: '700', marginTop: 2 };
 const s_protocolBlock: any = { borderRadius: 8, borderLeftWidth: 4, padding: 12, marginBottom: 8 };
 const s_protocolHeader: any = { marginBottom: 8 };

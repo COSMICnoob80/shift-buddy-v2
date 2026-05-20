@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   ScrollView,
   StyleSheet,
@@ -10,8 +10,11 @@ import { useLocalSearchParams } from 'expo-router';
 import { SQLiteDatabase } from 'expo-sqlite';
 import { getDb } from '../../lib/db';
 import { getBookSection, BookSection } from '../../lib/book';
+import { useTheme, Colors } from '../../theme/ThemeProvider';
 
-function renderContent(content: string): React.ReactNode[] {
+type ThemeColors = typeof Colors.light;
+
+function renderContent(content: string, styles: ReturnType<typeof createStyles>): React.ReactNode[] {
   const lines = content.split('\n');
   const elements: React.ReactNode[] = [];
   let key = 0;
@@ -36,7 +39,7 @@ function renderContent(content: string): React.ReactNode[] {
       elements.push(
         <View key={key} style={styles.listItem}>
           <Text style={styles.bullet}>{'\u2022'} </Text>
-          <Text style={styles.listText}>{renderInline(trimmed.slice(2))}</Text>
+          <Text style={styles.listText}>{renderInline(trimmed.slice(2), styles)}</Text>
         </View>,
       );
       key++;
@@ -47,7 +50,7 @@ function renderContent(content: string): React.ReactNode[] {
       elements.push(
         <View key={key} style={styles.listItem}>
           <Text style={styles.bullet}>  </Text>
-          <Text style={styles.listText}>{renderInline(trimmed.replace(/^\d+\.\s*/, ''))}</Text>
+          <Text style={styles.listText}>{renderInline(trimmed.replace(/^\d+\.\s*/, ''), styles)}</Text>
         </View>,
       );
       key++;
@@ -55,7 +58,7 @@ function renderContent(content: string): React.ReactNode[] {
     }
 
     elements.push(
-      <Text key={key} style={styles.body}>{renderInline(trimmed)}</Text>,
+      <Text key={key} style={styles.body}>{renderInline(trimmed, styles)}</Text>,
     );
     key++;
   }
@@ -63,7 +66,7 @@ function renderContent(content: string): React.ReactNode[] {
   return elements;
 }
 
-function renderInline(text: string): React.ReactNode {
+function renderInline(text: string, styles: ReturnType<typeof createStyles>): React.ReactNode {
   const parts = text.split(/(\*\*[^*]+\*\*)/g);
   return parts.map((part, i) => {
     if (part.startsWith('**') && part.endsWith('**')) {
@@ -78,6 +81,8 @@ export default function ProtocolDetailScreen() {
   const [db, setDb] = useState<SQLiteDatabase | null>(null);
   const [section, setSection] = useState<BookSection | null>(null);
   const [loading, setLoading] = useState(true);
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
 
   useEffect(() => {
     getDb().then(setDb);
@@ -94,7 +99,7 @@ export default function ProtocolDetailScreen() {
   if (loading) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator size="large" color="#0a7ea4" />
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
@@ -111,31 +116,33 @@ export default function ProtocolDetailScreen() {
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <Text style={styles.chapterLabel}>{section.chapterTitle}</Text>
       <Text style={styles.title}>{section.title}</Text>
-      {renderContent(section.content)}
+      {renderContent(section.content, styles)}
       <Text style={styles.source}>Source: Doctor On Duty 2021</Text>
     </ScrollView>
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff' },
-  content: { padding: 20, paddingBottom: 60 },
-  center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  chapterLabel: {
-    fontSize: 11,
-    color: '#0a7ea4',
-    fontWeight: '600',
-    textTransform: 'uppercase',
-    marginBottom: 4,
-  },
-  title: { fontSize: 22, fontWeight: '700', color: '#11181C', marginBottom: 16 },
-  body: { fontSize: 15, lineHeight: 24, color: '#374151', marginBottom: 2 },
-  bold: { fontWeight: '700' },
-  boldHeading: { fontSize: 15, fontWeight: '700', color: '#11181C', marginTop: 8, marginBottom: 4 },
-  listItem: { flexDirection: 'row', paddingRight: 16, marginBottom: 2 },
-  bullet: { fontSize: 15, lineHeight: 24, color: '#374151', width: 14 },
-  listText: { fontSize: 15, lineHeight: 24, color: '#374151', flex: 1 },
-  source: { fontSize: 11, color: '#6b7280', fontStyle: 'italic', marginTop: 24, textAlign: 'center' },
-  notFound: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  notFoundText: { fontSize: 16, color: '#888' },
-});
+function createStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    container: { flex: 1, backgroundColor: colors.background },
+    content: { padding: 20, paddingBottom: 60 },
+    center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+    chapterLabel: {
+      fontSize: 11,
+      color: colors.primary,
+      fontWeight: '600',
+      textTransform: 'uppercase',
+      marginBottom: 4,
+    },
+    title: { fontSize: 22, fontWeight: '700', color: colors.text, marginBottom: 16 },
+    body: { fontSize: 15, lineHeight: 24, color: colors.text, marginBottom: 2 },
+    bold: { fontWeight: '700' },
+    boldHeading: { fontSize: 15, fontWeight: '700', color: colors.text, marginTop: 8, marginBottom: 4 },
+    listItem: { flexDirection: 'row', paddingRight: 16, marginBottom: 2 },
+    bullet: { fontSize: 15, lineHeight: 24, color: colors.text, width: 14 },
+    listText: { fontSize: 15, lineHeight: 24, color: colors.text, flex: 1 },
+    source: { fontSize: 11, color: colors.textSecondary, fontStyle: 'italic', marginTop: 24, textAlign: 'center' },
+    notFound: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+    notFoundText: { fontSize: 16, color: colors.textTertiary },
+  });
+}
