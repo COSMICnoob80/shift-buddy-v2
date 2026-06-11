@@ -1,0 +1,40 @@
+{
+  "name": "aki_staging",
+  "description": "AKI staging by KDIGO 2023 creatinine criteria",
+  "tiers": [
+    {
+      "label": "Stage 1",
+      "range": "Creatinine rise ≥ 0.3 mg/dL in 48h OR 1.5–1.9× baseline",
+      "actions": [
+        "Hold nephrotoxic drugs (NSAIDs, aminoglycosides, ACEi/ARB)",
+        "Fluid challenge 250ml NS over 1 hour (if not fluid-overloaded)",
+        "Monitor urine output hourly",
+        "Recheck creatinine in 12 hours"
+      ]
+    },
+    {
+      "label": "Stage 2",
+      "range": "Creatinine 2.0–2.9× baseline",
+      "actions": [
+        "Hold nephrotoxic drugs",
+        "Renal dose adjustment for ALL medications",
+        "Daily U&E monitoring",
+        "Strict intake/output charting",
+        "Senior physician review"
+      ]
+    },
+    {
+      "label": "Stage 3",
+      "range": "Creatinine ≥ 3× baseline OR ≥ 4.0 mg/dL absolute",
+      "actions": [
+        "CALL SENIOR IMMEDIATELY",
+        "Nephrology consult",
+        "Urgent K+, pH, bicarbonate",
+        "Hold all nephrotoxic drugs",
+        "Consider dialysis access preparation"
+      ]
+    }
+  ],
+  "escalation": "Stage 3 requires immediate senior + nephrology review",
+  "source": "KDIGO 2023 AKI Clinical Practice Guidelines"
+}

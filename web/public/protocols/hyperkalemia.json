@@ -1,0 +1,51 @@
+{
+  "name": "hyperkalemia",
+  "description": "Hyperkalemia management (AHA 2023 / KDIGO 2023)",
+  "tiers": [
+    {
+      "label": "Moderate",
+      "range": "K+ 5.5–5.9 mEq/L",
+      "actions": [
+        "Stop potassium-sparing drugs (spironolactone, ACEi, ARB)",
+        "Kayexalate (sodium polystyrene sulfonate) 15g PO",
+        "Recheck K+ in 4 hours"
+      ]
+    },
+    {
+      "label": "Severe",
+      "range": "K+ 6.0–6.4 mEq/L",
+      "actions": [
+        "IV Calcium Gluconate 10% 10ml over 10 minutes",
+        "Insulin 10 units + Dextrose 25g (50ml D50) IV",
+        "Stop potassium-sparing drugs",
+        "Kayexalate 15g PO",
+        "ECG stat — check for peaked T waves, widened QRS",
+        "Recheck K+ in 2 hours"
+      ]
+    },
+    {
+      "label": "Emergency (ECG changes)",
+      "range": "K+ 6.0–6.4 mEq/L + ECG changes",
+      "actions": [
+        "IV Calcium Gluconate 10% 10ml over 10 minutes — STAT",
+        "Insulin 10 units + Dextrose 25g IV",
+        "Continuous cardiac monitoring",
+        "Cardiology consult",
+        "Consider ICU transfer"
+      ]
+    },
+    {
+      "label": "Emergency",
+      "range": "K+ ≥ 6.5 mEq/L",
+      "actions": [
+        "IV Calcium Gluconate 10% 10ml over 10 minutes — STAT",
+        "Insulin 10 units + Dextrose 25g IV",
+        "Nebulized salbutamol 10mg",
+        "ICU transfer",
+        "Consider dialysis — nephrology consult"
+      ]
+    }
+  ],
+  "escalation": "CALL SENIOR IMMEDIATELY for K+ ≥ 6.5 mEq/L or any ECG changes",
+  "source": "AHA 2023 / KDIGO 2023"
+}

@@ -1,0 +1,44 @@
+{
+  "name": "dka",
+  "description": "Diabetic Ketoacidosis severity and management",
+  "tiers": [
+    {
+      "label": "Mild",
+      "range": "pH 7.25–7.30, HCO3 15–18 mEq/L",
+      "actions": [
+        "ABG STAT (pH, HCO3, pCO2)",
+        "BMP STAT (K+, Na+, Cl-, BUN, Creatinine)",
+        "Insulin infusion per DKA protocol",
+        "IV fluids — 0.9% NaCl 1L/hr for first 2 hours",
+        "Hourly blood sugar monitoring"
+      ]
+    },
+    {
+      "label": "Moderate",
+      "range": "pH 7.00–7.24, HCO3 10–14 mEq/L",
+      "actions": [
+        "ABG STAT",
+        "BMP STAT",
+        "Insulin infusion",
+        "IV fluids — 0.9% NaCl 1L/hr",
+        "Potassium replacement (K+ < 3.5 → hold insulin, replace first)",
+        "Hourly monitoring"
+      ]
+    },
+    {
+      "label": "Severe",
+      "range": "pH < 7.00, HCO3 < 10 mEq/L",
+      "actions": [
+        "CALL SENIOR + ICU consult",
+        "ABG STAT",
+        "Insulin infusion",
+        "Aggressive IV fluids",
+        "Potassium replacement",
+        "Consider bicarbonate therapy (pH < 6.9 only)",
+        "Continuous monitoring"
+      ]
+    }
+  ],
+  "escalation": "Severe DKA (pH < 7.00) requires ICU-level care and immediate senior review",
+  "source": "DKA Management Guidelines (ADA 2024 / WHO)"
+}

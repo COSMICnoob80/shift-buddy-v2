@@ -215,3 +215,22 @@ See `.specify/memory/constitution.md` for code quality, testing, performance, se
 
 ## Recent Changes
 - 001-p0-foundation-auth: Added Python 3.12+ (api/), TypeScript 5.x strict (web/) + FastAPI 0.115+, Pydantic v2, SQLAlchemy 2.0 async + asyncpg, Alembic, passlib[bcrypt], python-jose[cryptography], slowapi, structlog, pydantic-settings; Next.js 14 App Router, Tailwind, Playwright
+
+
+
+## Principle XV: Delivery-First
+This app runs on an HO's Android phone in a hospital ward with NO
+WiFi. Mobile data only (metered). All core functions (patient entry,
+vitals, labs, protocols, alerts) work FULLY OFFLINE via expo-sqlite.
+Network is enhancement only (sync, cloud backup). Any feature that
+spinner-waits for network to do its core job is a bug.
+Data comes from paper files (camera photo + manual entry).
+Output goes to screen + WhatsApp share to senior group.
+
+## Principle XVI: Model Selection
+Runtime (shipped in APK):
+- Deterministic engines ONLY for dosing, thresholds, protocols.
+- MedGemma 1.5 4B on-device (P2+, advisory only, never primary).
+- Gemma 4 E2B on-device (P2+, OCR + voice).
+- NO cloud LLMs in clinical path. Ever.
+Dev tooling (not shipped): HERMES + DeepSeek V4 Flash via OpenRouter.

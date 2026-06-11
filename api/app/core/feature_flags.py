@@ -29,6 +29,8 @@ class FeatureFlags(BaseSettings):
     shadow_mode_enabled: bool = False
     agent_autonomy_level: int = 0
     divergence_logging_enabled: bool = False
+    # P1c shadow suggest endpoint (GET /api/v1/shadow/suggest)
+    shadow_suggest: bool = False
 
 
 @lru_cache(maxsize=1)

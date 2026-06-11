@@ -1,54 +1,103 @@
 "use client";
 
+import { useCallback, useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import useSWR from "swr";
 import AppShell from "@/components/AppShell";
 import { getToken } from "@/lib/session";
-import { redirect } from "next/navigation";
-import { useEffect, useState } from "react";
+import { listPatients } from "@/lib/api";
+import type { PatientListResponse } from "@/lib/api";
+import SummaryBar from "./_components/SummaryBar";
+import PatientGrid from "./_components/PatientGrid";
+import ExpandedPatient from "./_components/ExpandedPatient";
+import { Suspense } from "react";
 
-export default function BoardPage() {
-  const [ready, setReady] = useState(false);
+const SHADOW_ENABLED = process.env["NEXT_PUBLIC_FEATURE_SHADOW_SUGGEST"] === "true";
+const POLL_MS = 30_000;
+
+function BoardContent() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const selectedPatientId = searchParams.get("patient");
 
   useEffect(() => {
     if (!getToken()) {
-      redirect("/login");
+      router.replace("/login");
     }
-    setReady(true);
-  }, []);
+  }, [router]);
 
-  if (!ready) return null;
+  const { data, isLoading } = useSWR<PatientListResponse>(
+    "board-patients",
+    () => listPatients({ status: "admitted", sort: "acuity" }),
+    { refreshInterval: POLL_MS },
+  );
+
+  const handleSelectPatient = useCallback(
+    (id: string) => {
+      const params = new URLSearchParams(searchParams.toString());
+      params.set("patient", id);
+      router.push(`/board?${params.toString()}`, { scroll: false });
+    },
+    [router, searchParams],
+  );
+
+  const handleClosePatient = useCallback(() => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete("patient");
+    const qs = params.toString();
+    router.push(qs ? `/board?${qs}` : "/board", { scroll: false });
+  }, [router, searchParams]);
+
+  if (isLoading && !data) {
+    return (
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          minHeight: "40vh",
+          color: "var(--color-text-secondary)",
+          fontSize: "0.875rem",
+        }}
+      >
+        Loading patients…
+      </div>
+    );
+  }
+
+  const patients = data?.patients ?? [];
+  const summary = data?.summary ?? { total: 0, critical: 0, urgent: 0, stable: 0, discharge_ready: 0 };
 
   return (
-    <AppShell userLabel="House Officer">
-      <div style={styles.placeholder}>
-        <h2 style={styles.title}>Clinical Board</h2>
-        <p style={styles.body}>
-          Patient data and clinical features arrive in Phase 1.
-          <br />
-          Your session is active.
-        </p>
-      </div>
-    </AppShell>
+    <>
+      <SummaryBar summary={summary} />
+      <PatientGrid
+        patients={patients}
+        onSelectPatient={handleSelectPatient}
+      />
+      {selectedPatientId && (
+        <ExpandedPatient
+          patientId={selectedPatientId}
+          onClose={handleClosePatient}
+          shadowEnabled={SHADOW_ENABLED}
+        />
+      )}
+    </>
   );
 }
 
-const styles = {
-  placeholder: {
-    display: "flex",
-    flexDirection: "column" as const,
-    alignItems: "center",
-    justifyContent: "center",
-    minHeight: "60vh",
-    gap: "var(--space-4)",
-    textAlign: "center" as const,
-  },
-  title: {
-    fontWeight: 600,
-    fontSize: "1.25rem",
-    color: "var(--color-text-primary)",
-  },
-  body: {
-    color: "var(--color-text-secondary)",
-    fontSize: "0.95rem",
-    lineHeight: 1.6,
-  },
-} as const;
+export default function BoardPage() {
+  return (
+    <AppShell userLabel="House Officer">
+      <Suspense
+        fallback={
+          <div style={{ padding: "var(--space-6)", color: "var(--color-text-secondary)" }}>
+            Loading…
+          </div>
+        }
+      >
+        <BoardContent />
+      </Suspense>
+    </AppShell>
+  );
+}

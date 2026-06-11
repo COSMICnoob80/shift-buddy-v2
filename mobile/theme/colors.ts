@@ -23,6 +23,10 @@ export const Colors = {
     inputBackground: '#fafafa',
     inputBorder: '#e5e7eb',
     overlay: '#00000040',
+    errorBg: '#fef2f2',
+    warningBg: '#fffbeb',
+    successBg: '#f0fdf4',
+    infoBg: '#f0f9ff',
   },
   dark: {
     text: '#ECEDEE',
@@ -45,5 +49,9 @@ export const Colors = {
     inputBackground: '#1a1a1a',
     inputBorder: '#333333',
     overlay: '#00000080',
+    errorBg: '#2d1a1a',
+    warningBg: '#2d261a',
+    successBg: '#1a2d1a',
+    infoBg: '#1a262d',
   },
 };

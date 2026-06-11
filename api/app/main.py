@@ -24,6 +24,7 @@ from app.routers import health as health_router
 from app.routers import labs as labs_router
 from app.routers import patients as patients_router
 from app.routers import protocols as protocols_router
+from app.routers import shadow as shadow_router
 from app.routers import vitals as vitals_router
 from app.routers.alerts import alerts_acknowledge_router
 
@@ -93,6 +94,7 @@ def create_app() -> FastAPI:
     # POST /alerts/{id}/acknowledge lives under /api/v1
     app.include_router(alerts_acknowledge_router, prefix=API_PREFIX)
     app.include_router(protocols_router.router, prefix=API_PREFIX)
+    app.include_router(shadow_router.router, prefix=API_PREFIX)
     return app
 
 

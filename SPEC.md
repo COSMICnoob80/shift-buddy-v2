@@ -6,6 +6,25 @@
 
 ---
 
+## 0. DELIVERY CONTEXT (Principle XV — mandatory for all features)
+
+Every acceptance criterion in this spec MUST be traceable to this table. A feature that
+fails against any row here is a defect, not a design choice.
+
+| Dimension | Constraint |
+|---|---|
+| **Physical setting** | Hospital ward — doctor standing between patients, one hand free |
+| **Network posture** | Mobile data only, metered. App MUST function fully offline. Cloud = enhancement only. |
+| **Input modality** | Camera (paper file photo) + manual one-thumb keyboard entry |
+| **Output targets** | Screen (primary) + WhatsApp share to senior group (secondary) |
+| **One-hand constraint** | All primary flows must be reachable with thumb; no two-hand pinch/zoom required |
+| **Primary model tier (P1)** | Deterministic code only — no network calls on core clinical path (Principle XVI) |
+| **Primary model tier (P2)** | MedGemma on-device via Android AICore — offline, no cloud dependency |
+| **Offline hard requirement** | App MUST NEVER show a spinner waiting for network to complete a clinical action |
+| **Spinner rule** | Network spinners are only permitted for non-clinical enhancement features (e.g., OCR, sync) |
+
+---
+
 ## 1. DATA MODELS
 
 ### 1.1 Patient

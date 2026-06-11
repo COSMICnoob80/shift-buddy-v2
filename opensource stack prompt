@@ -1,0 +1,44 @@
+Build an Expo React Native app (TypeScript, expo-sqlite, offline-only).
+
+CORE SCREEN: Search bar at top. User types a clinical problem 
+(e.g., "hyperkalemia", "DKA", "chest pain"). App shows:
+
+1. Definition (1 line)
+2. Severity assessment (based on values user can optionally enter)
+3. Step-by-step management with:
+   - Drug name (generic + Pakistani brand)
+   - Dose
+   - Route
+   - Frequency
+   - Key monitoring points
+4. When to escalate to senior
+5. Source: "Doctor On Duty 2021, Ch. X"
+
+The protocol content is stored as JSON in assets/protocols/.
+Start with these 5: hyperkalemia, DKA, AKI, chest pain, sepsis.
+
+SECONDARY SCREENS:
+- Patient list (name, bed, diagnosis, acuity color)
+- Add patient (name, bed, diagnosis, meds as free text)
+- Patient detail (tap → see vitals, labs, alerts)
+- When labs/vitals entered, auto-link to relevant protocol
+  ("K+ 6.5 entered → tap to see hyperkalemia protocol")
+- Share button → formats patient summary for WhatsApp
+- GFR, anion gap, corrected calcium calculators
+- PIN lock on app open
+
+The app already exists at ~/shift-buddy-v2/mobile/ with 
+SQLite schema, protocol engines (hyperkalemia.ts, dka.ts, 
+aki_staging.ts), and patient CRUD screens. 
+
+FIX: The protocol screens currently only show "CRITICAL" alerts.
+They need to show the full management plan (actions, drugs, doses,
+escalation) from the protocol engine's output. The protocol 
+functions already return this data — it's just not displayed.
+
+FIX: Camera is broken — replace expo-file-system moveAsync with
+the new File API from expo-file-system/next.
+
+DO NOT: build any server, backend, API, or authentication system.
+Everything runs on-device with SQLite. The app works with 
+airplane mode on.

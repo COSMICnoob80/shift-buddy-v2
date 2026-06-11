@@ -2,12 +2,18 @@ import { openDatabaseAsync, SQLiteDatabase } from 'expo-sqlite';
 import { runMigrations } from './migrate';
 
 let _db: SQLiteDatabase | null = null;
+let _dbPromise: Promise<SQLiteDatabase> | null = null;
 
 export async function getDb(): Promise<SQLiteDatabase> {
   if (_db !== null) return _db;
-  _db = await openDatabaseAsync('shift_buddy.db');
-  await runMigrations(_db);
-  return _db;
+  if (_dbPromise !== null) return _dbPromise;
+  _dbPromise = (async () => {
+    const db = await openDatabaseAsync('shift_buddy.db');
+    await runMigrations(db);
+    _db = db;
+    return db;
+  })();
+  return _dbPromise;
 }
 
 export async function dischargePatient(id: string) {

@@ -151,6 +151,6 @@ function createStyles(colors: ThemeColors) {
     dischargeBtn: {
       flex: 2, borderRadius: 10, paddingVertical: 14, alignItems: 'center',
     },
-    dischargeBtnText: { color: '#fff', fontSize: 16, fontWeight: '700' },
+    dischargeBtnText: { color: colors.background, fontSize: 16, fontWeight: '700' },
   });
 }

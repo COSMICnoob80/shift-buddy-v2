@@ -1,4 +1,37 @@
 <!--
+SYNC IMPACT REPORT (v0.3.0)
+==================
+Version change: 0.2.0 → 0.3.0
+Bump rationale: MINOR — added two new principles (XV. Delivery-First
+                Validation, XVI. Model Selection Hierarchy). Pre-1.0
+                MINOR bumps are treated as potentially breaking per
+                governance policy; amendment procedure followed.
+
+Added principles:
+  XV.  Delivery-First Validation — every spec MUST include a Delivery
+       Context table (physical setting, network posture, input modality,
+       output target, one-hand constraints). A feature that requires
+       network connectivity to perform its core clinical function is a
+       defect under Principle XII, not a design choice.
+  XVI. Model Selection Hierarchy — deterministic code first, on-device
+       ML second, cloud ML last. P1 = deterministic only. MedGemma
+       on-device is the P2 gate. "Spinner waiting for network" on core
+       clinical path = violation.
+
+Amendment rationale: v0.4.0 (PWA board sprint) built a server-dependent
+web app against Offline-First (XII). Principle XV prevents recurrence by
+requiring explicit Delivery Context validation at spec-write time, not
+post-hoc at code review. Principle XVI makes the three-tier model
+selection rule binding rather than advisory.
+
+Templates alignment (v0.3.0 follow-ups):
+  ⚠ .specify/templates/spec-template.md — add mandatory §0 Delivery
+    Context table to every feature spec.
+  ⚠ .specify/templates/plan-template.md — Constitution Check gate MUST
+    walk principles I–XVI.
+  ✅ phr-template.prompt.md — no mandated changes.
+
+------------------------------------------------------------------
 SYNC IMPACT REPORT (v0.2.0)
 ==================
 Version change: 0.1.0 → 0.2.0
@@ -181,6 +214,38 @@ an explicit constitution amendment recording the threshold, sample size, and mea
 divergence. Shadow-mode telemetry MUST be captured in a durable event log (see
 Principle XIV) from day one.
 
+### XV. Delivery-First Validation
+
+Every feature specification MUST include a Delivery Context table defining: physical
+use setting, network posture, input modality, output targets, and one-hand usability
+constraints. Before a spec is considered complete, every acceptance criterion MUST be
+traced back to the Delivery Context and confirmed to work within it.
+
+A feature that requires network connectivity to perform its core clinical function is
+a defect under Principle XII (Offline-First), not a design choice. "Works when connected"
+is not a degraded mode — it is a build failure. This principle exists because v0.4.0
+built a server-dependent PWA (patient board) against an explicit offline-first
+requirement; the Delivery Context gate is the structural fix.
+
+Graduation to a later phase does NOT exempt a feature from this check. Any P-gate
+review that omits the Delivery Context trace is incomplete.
+
+### XVI. Model Selection Hierarchy
+
+Clinical logic MUST follow a strict, ordered selection hierarchy:
+  1. Deterministic code — protocol engines, alert threshold evaluators,
+     clinical calculators. These are the only acceptable P1 implementations.
+  2. On-device ML — MedGemma 1.5, Whisper, or other OSS models running
+     locally via Android AICore or equivalent. P2 gate.
+  3. Cloud ML — enhancement features only, with graceful degradation to (1)
+     or (2) when offline. NEVER the primary path for core clinical decisions.
+
+Any UI state that shows a spinner waiting for network to complete a core clinical
+action is a violation of this principle and of Principle XII. Cloud inference MAY
+be used for non-clinical enhancement (e.g., OCR of paper files) but MUST degrade
+gracefully. Implementations that skip tier (1) and jump to tier (3) require an
+explicit constitution amendment recording the clinical risk justification.
+
 ### XIV. MEP over MVP
 
 Every P0 deliverable is a Minimum Evolvable Product, not a Minimum Viable Product.
@@ -262,4 +327,12 @@ Report link (top-of-file header).
   feature `001-p0-foundation-auth`. Sync Impact Report: see header block
   "SYNC IMPACT REPORT (v0.2.0)" at top of this file.
 
-**Version**: 0.2.0 | **Ratified**: 2026-04-18 | **Last Amended**: 2026-04-19
+- **v0.3.0 — 2026-05-02** — Added Principle XV (Delivery-First Validation) and
+  Principle XVI (Model Selection Hierarchy). Rationale: v0.4.0 built a
+  server-dependent PWA patient board against Offline-First (XII); Principle XV
+  prevents recurrence by mandating a Delivery Context table in every spec.
+  Principle XVI makes the three-tier model selection rule (deterministic →
+  on-device ML → cloud ML) binding rather than advisory. Sync Impact Report:
+  see header block "SYNC IMPACT REPORT (v0.3.0)" at top of this file.
+
+**Version**: 0.3.0 | **Ratified**: 2026-04-18 | **Last Amended**: 2026-05-02

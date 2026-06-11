@@ -4,6 +4,8 @@ P1b amendment: allowlist extended from P1a {__init__.py, health.py, auth.py,
 patients.py, vitals.py, labs.py} to also include {alerts.py, protocols.py}
 per FR-018 and plan.md §Scope Guard Amendment.
 
+P1c amendment: shadow.py added per T141 (shadow suggest endpoint, Principle XIII).
+
 Any other file in api/app/routers/ still fails loud.
 """
 
@@ -22,6 +24,7 @@ ALLOWED: frozenset[str] = frozenset(
         "labs.py",
         "alerts.py",
         "protocols.py",
+        "shadow.py",
     }
 )
 
@@ -35,7 +38,7 @@ def test_router_file_set_matches_p1b_allowlist() -> None:
     unexpected = actual - ALLOWED
     missing = ALLOWED - actual
     assert not unexpected, (
-        f"P1b router allowlist violation (Principle III): unexpected files {sorted(unexpected)} "
+        f"P1c router allowlist violation (Principle III): unexpected files {sorted(unexpected)} "
         f"in {ROUTERS_DIR}. Allowed: {sorted(ALLOWED)}."
     )
     assert not missing, (
