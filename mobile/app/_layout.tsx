@@ -38,7 +38,7 @@ function RootLayoutNav() {
           ),
         }}
       >
-        <Stack.Screen name="index" options={{ headerShown: false, title: 'Doctor On Duty' }} />
+        <Stack.Screen name="index" options={{ title: 'Doctor On Duty', headerLargeTitle: true }} />
         <Stack.Screen name="alerts/index" options={{ title: 'Alerts' }} />
         <Stack.Screen name="patients/index" options={{ title: 'Patients', headerLargeTitle: true }} />
         <Stack.Screen name="patients/add" options={{ title: 'Add Patient', presentation: 'modal' }} />
@@ -47,7 +47,6 @@ function RootLayoutNav() {
         <Stack.Screen name="patients/[id]/labs" options={{ title: 'Labs', presentation: 'modal' }} />
         <Stack.Screen name="patients/[id]/camera" options={{ title: 'Camera', presentation: 'modal' }} />
         <Stack.Screen name="patients/[id]/review" options={{ title: 'Review Data', presentation: 'modal' }} />
-        <Stack.Screen name="protocols/index" options={{ title: 'Doctor On Duty' }} />
         <Stack.Screen name="protocols/[id]" options={{ title: 'Doctor On Duty 2021' }} />
         <Stack.Screen name="protocols/chapter/[chapterId]" options={{ title: 'Doctor On Duty' }} />
         <Stack.Screen name="protocols/calc/[type]" options={{ title: 'Calculator' }} />

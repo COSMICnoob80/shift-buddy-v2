@@ -36,6 +36,13 @@ export async function runMigrations(db: SQLiteDatabase): Promise<void> {
     // FTS5 not available — drug search falls back to LIKE
   }
 
+  // v0.5.3 — remove PIN feature: clean up stale pin_hash from settings
+  try {
+    await db.execAsync("DELETE FROM settings WHERE key = 'pin_hash'");
+  } catch {
+    // ignore
+  }
+
   // Seed book content on first run
   if (!seeded) {
     const bookRow = await db.getFirstAsync<{ cnt: number }>(
