@@ -39,6 +39,14 @@ export async function dischargeWithNotes(
   );
 }
 
+export async function deletePatient(id: string) {
+  const db = await getDb();
+  await db.runAsync('DELETE FROM alerts WHERE patient_id = ?', [id]);
+  await db.runAsync('DELETE FROM lab_results WHERE patient_id = ?', [id]);
+  await db.runAsync('DELETE FROM vitals WHERE patient_id = ?', [id]);
+  await db.runAsync('DELETE FROM patients WHERE id = ?', [id]);
+}
+
 export interface Patient {
   id: string;
   name: string;

@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { Pressable, StyleSheet, Text, View, Alert } from 'react-native';
 import { router } from 'expo-router';
+import { deletePatient } from '../lib/db';
 import { useTheme, Colors } from '../theme/ThemeProvider';
 
 type ThemeColors = typeof Colors.light;
@@ -43,13 +44,33 @@ export default function PatientCard({
 
   const handleLongPress = () => {
     Alert.alert(
-      'Discharge Patient',
-      `How would you like to discharge ${name}?`,
+      'Patient Actions',
+      `Choose action for ${name} (Bed ${bedNumber})`,
       [
         { text: 'Cancel', style: 'cancel' },
         {
-          text: 'Quick Discharge',
+          text: 'Delete Patient',
           style: 'destructive',
+          onPress: () => {
+            Alert.alert(
+              'Delete Patient',
+              `Permanently delete ${name} and ALL their data (vitals, labs, alerts)? This cannot be undone.`,
+              [
+                { text: 'Cancel', style: 'cancel' },
+                {
+                  text: 'Delete',
+                  style: 'destructive',
+                  onPress: async () => {
+                    await deletePatient(id);
+                    onLongPress(id);
+                  },
+                },
+              ],
+            );
+          },
+        },
+        {
+          text: 'Quick Discharge',
           onPress: () => onLongPress(id),
         },
         {

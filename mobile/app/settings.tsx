@@ -38,7 +38,7 @@ export default function SettingsScreen() {
   async function handleClearData() {
     Alert.alert(
       'Clear All Data',
-      'This will permanently delete all patients, vitals, labs, alerts, and settings. This cannot be undone.',
+      'This will permanently delete ALL data: patients, vitals, labs, alerts, settings, book content, drug formulary. This cannot be undone.',
       [
         { text: 'Cancel', style: 'cancel' },
         {
@@ -51,9 +51,42 @@ export default function SettingsScreen() {
               await db.execAsync('DELETE FROM lab_results');
               await db.execAsync('DELETE FROM vitals');
               await db.execAsync('DELETE FROM patients');
-              Alert.alert('Done', 'All patient data has been cleared.');
+              await db.execAsync('DELETE FROM shadow_events');
+              await db.execAsync('DELETE FROM settings');
+              await db.execAsync('DELETE FROM book_sections');
+              await db.execAsync('DELETE FROM book_fts');
+              await db.execAsync('DELETE FROM drugs');
+              await db.execAsync('DELETE FROM drugs_fts');
+              Alert.alert('Done', 'All data has been cleared. App will restart on next launch.');
             } catch {
               Alert.alert('Error', 'Could not clear data.');
+            }
+          },
+        },
+      ],
+    );
+  }
+
+  async function handleResetShift() {
+    Alert.alert(
+      'Reset This Shift',
+      'This will delete patients, vitals, labs, alerts for a fresh shift start. Book content, drug formulary, and theme settings will be KEPT.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Reset Shift',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              const db = await getDb();
+              await db.execAsync('DELETE FROM alerts');
+              await db.execAsync('DELETE FROM lab_results');
+              await db.execAsync('DELETE FROM vitals');
+              await db.execAsync('DELETE FROM patients');
+              await db.execAsync('DELETE FROM shadow_events');
+              Alert.alert('Done', 'Shift data cleared. Ready for new shift.');
+            } catch {
+              Alert.alert('Error', 'Could not reset shift.');
             }
           },
         },
@@ -105,10 +138,16 @@ export default function SettingsScreen() {
       <View style={styles.section}>
         <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>Data</Text>
         <Pressable
+          style={[styles.dangerBtn, { backgroundColor: colors.warningBg, borderColor: colors.warning }]}
+          onPress={handleResetShift}
+        >
+          <Text style={[styles.dangerBtnText, { color: colors.warning }]}>Reset this shift (keep book & drugs)</Text>
+        </Pressable>
+        <Pressable
           style={[styles.dangerBtn, { backgroundColor: colors.errorBg, borderColor: colors.danger }]}
           onPress={handleClearData}
         >
-          <Text style={[styles.dangerBtnText, { color: colors.danger }]}>Clear all patient data</Text>
+          <Text style={[styles.dangerBtnText, { color: colors.danger }]}>Clear ALL data (book, drugs, settings)</Text>
         </Pressable>
       </View>
     </ScrollView>
