@@ -47,6 +47,7 @@ function RootLayoutNav() {
         <Stack.Screen name="patients/[id]/labs" options={{ title: 'Labs', presentation: 'modal' }} />
         <Stack.Screen name="patients/[id]/camera" options={{ title: 'Camera', presentation: 'modal' }} />
         <Stack.Screen name="patients/[id]/review" options={{ title: 'Review Data', presentation: 'modal' }} />
+        <Stack.Screen name="patients/[id]/medications" options={{ title: 'Medications', presentation: 'modal' }} />
         <Stack.Screen name="protocols/[id]" options={{ title: 'Doctor On Duty 2021' }} />
         <Stack.Screen name="protocols/chapter/[chapterId]" options={{ title: 'Doctor On Duty' }} />
         <Stack.Screen name="protocols/calc/[type]" options={{ title: 'Calculator' }} />

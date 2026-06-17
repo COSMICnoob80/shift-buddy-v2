@@ -11,7 +11,7 @@ import {
   View,
 } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
-import * as Crypto from 'expo-crypto';
+import { uuid } from '../../lib/uuid';
 import { SQLiteDatabase } from 'expo-sqlite';
 import { getDb } from '../../lib/db';
 import { useTheme, Colors } from '../../theme/ThemeProvider';
@@ -99,7 +99,7 @@ export default function AddPatientScreen() {
            form.ward.trim() || null, form.medications.trim() || null, now, id],
         );
       } else {
-        const newId = Crypto.randomUUID();
+        const newId = uuid();
         await db.runAsync(
           `INSERT INTO patients (id,name,bed_number,diagnosis,age,sex,acuity,ward,current_medications,status,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,'active',?,?)`,
           [newId, form.name.trim(), form.bedNumber.trim(), form.diagnosis.trim(),

@@ -9,7 +9,7 @@ import {
   View,
 } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
-import * as Crypto from 'expo-crypto';
+import { uuid } from '../../../lib/uuid';
 import { getDb } from '../../../lib/db';
 import { useTheme, Colors } from '../../../theme/ThemeProvider';
 
@@ -65,7 +65,7 @@ export default function ReviewScreen() {
       await db.runAsync(
         `INSERT INTO lab_results (id, patient_id, test_name, value, unit, recorded_at)
          VALUES (?, ?, ?, ?, ?, ?)`,
-        [Crypto.randomUUID(), id, row.param.trim(), numVal, row.unit || '', now],
+        [uuid(), id, row.param.trim(), numVal, row.unit || '', now],
       );
     }
 

@@ -13,6 +13,7 @@ import { SQLiteDatabase } from 'expo-sqlite';
 import { getDb } from '../../../lib/db';
 import AlertBanner from '../../../components/AlertBanner';
 import { generateSummary } from '../../../lib/summary';
+import type { Medication } from './medications';
 import { evaluate as evaluateHyperkalemia } from '../../../lib/protocols/hyperkalemia';
 import { evaluate as evaluateDka } from '../../../lib/protocols/dka';
 import { evaluateAki } from '../../../lib/protocols/aki_staging';
@@ -63,6 +64,34 @@ async function loadDetail(db: SQLiteDatabase, id: string) {
     if (!labMap.has(lab.test_name)) labMap.set(lab.test_name, lab);
   }
   return { patient, alerts, vitals, labs: Array.from(labMap.values()) };
+}
+
+function parseMedications(raw: string | null): Medication[] {
+  if (!raw) return [];
+  try {
+    return JSON.parse(raw) as Medication[];
+  } catch {
+    return [];
+  }
+}
+
+const RENAL_TOXIC_DRUGS = new Set([
+  'gentamicin', 'tobramycin', 'amikacin', 'vancomycin',
+  'spironolactone', 'enalapril', 'lisinopril', 'ramipril',
+  'ibuprofen', 'naproxen', 'diclofenac', 'indomethacin',
+  'celecoxib', 'metformin', 'tenofovir', 'acyclovir',
+]);
+
+function normalize(s: string): string {
+  return s.toLowerCase().replace(/[^a-z0-9]/g, '');
+}
+
+function isRenalToxic(drugName: string): boolean {
+  const n = normalize(drugName);
+  for (const toxic of RENAL_TOXIC_DRUGS) {
+    if (n.includes(toxic)) return true;
+  }
+  return false;
 }
 
 function getProtocolResult(
@@ -214,6 +243,7 @@ export default function PatientDetailScreen() {
       <View style={styles.actions}>
         <ActionBtn label="+ Vitals" color={colors.primary} onPress={() => router.push({ pathname: '/patients/[id]/vitals', params: { id } })} />
         <ActionBtn label="+ Labs" color={colors.info} onPress={() => router.push({ pathname: '/patients/[id]/labs', params: { id } })} />
+        <ActionBtn label="Meds" color={colors.tint} onPress={() => router.push({ pathname: '/patients/[id]/medications' as any, params: { id } })} />
         <ActionBtn label="Camera" color={colors.success} onPress={() => router.push({ pathname: '/patients/[id]/camera', params: { id } })} />
         <ActionBtn label="Share" color={colors.warning} onPress={handleShare} />
       </View>
@@ -273,9 +303,39 @@ export default function PatientDetailScreen() {
       </Section>
 
       <Section title="Medications" colors={colors}>
-        <Text style={{ fontSize: 14, color: colors.text, lineHeight: 20 }}>
-          {patient.current_medications?.trim() || 'None recorded'}
-        </Text>
+        {(() => {
+          const meds = parseMedications(patient.current_medications);
+          const hasAki = alerts.some((a) => a.parameter === 'Creatinine');
+          if (meds.length === 0) {
+            return (
+              <View>
+                <Text style={{ fontSize: 14, color: colors.textTertiary }}>None recorded</Text>
+                <Pressable onPress={() => router.push({ pathname: '/patients/[id]/medications' as any, params: { id } })}>
+                  <Text style={{ fontSize: 13, color: colors.primary, marginTop: 4, fontWeight: '600' }}>+ Add medications</Text>
+                </Pressable>
+              </View>
+            );
+          }
+          return (
+            <View>
+              {meds.map((m) => {
+                const toxic = hasAki && isRenalToxic(m.drugName);
+                return (
+                  <View key={m.id} style={[s_medRow, { backgroundColor: colors.cardBackground, borderLeftColor: toxic ? colors.danger : colors.primary }, toxic && s_toxicRow]}>
+                    <View style={s_medRowInner}>
+                      <Text style={[s_medName, { color: colors.text }]}>{m.drugName}</Text>
+                      {toxic && <Text style={[s_toxicBadge, { backgroundColor: colors.errorBg, color: colors.danger }]}>Renal tox</Text>}
+                    </View>
+                    <Text style={[s_medDetail, { color: colors.textSecondary }]}>{m.dose} {m.route} · {m.frequency}</Text>
+                  </View>
+                );
+              })}
+              <Pressable onPress={() => router.push({ pathname: '/patients/[id]/medications' as any, params: { id } })}>
+                <Text style={{ fontSize: 13, color: colors.primary, marginTop: 6, fontWeight: '600' }}>Manage medications</Text>
+              </Pressable>
+            </View>
+          );
+        })()}
       </Section>
     </ScrollView>
   );
@@ -363,6 +423,12 @@ const s_sectionHeading: any = { fontSize: 12, fontWeight: '700', marginBottom: 4
 const s_recRow: any = { flexDirection: 'row', marginBottom: 4, paddingLeft: 4 };
 const s_bullet: any = { fontSize: 13, lineHeight: 20 };
 const s_recAction: any = { fontSize: 13, lineHeight: 20, flex: 1 };
+const s_medRow: any = { flexDirection: 'column', borderRadius: 6, padding: 10, marginBottom: 6, borderLeftWidth: 3 };
+const s_toxicRow: any = { borderLeftWidth: 4 };
+const s_medRowInner: any = { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' };
+const s_medName: any = { fontSize: 14, fontWeight: '700' };
+const s_medDetail: any = { fontSize: 12, marginTop: 2 };
+const s_toxicBadge: any = { fontSize: 10, fontWeight: '700', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4, overflow: 'hidden' };
 
 function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
