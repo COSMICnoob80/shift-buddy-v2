@@ -1,0 +1,43 @@
+{
+  "hyperkalemia": {
+    "title": "Hyperkalemia",
+    "source": "Doctor On Duty 2021, Cardiac Emergencies",
+    "severity": [
+      {"range": "K+ 5.5-6.0", "level": "mild"},
+      {"range": "K+ 6.0-6.5", "level": "moderate"},
+      {"range": "K+ >6.5", "level": "severe"}
+    ],
+    "immediate": [
+      {
+        "drug": "Calcium Gluconate 10%",
+        "brand": "Calmate / Calcium Sandoz",
+        "dose": "10 ml IV over 10 min",
+        "why": "Cardioprotective. Repeat if ECG abnormal.",
+        "caution": "Do NOT mix with bicarbonate in same line."
+      }
+    ],
+    "shift_k": [
+      {
+        "drug": "Insulin (Actrapid) + Dextrose 25%",
+        "dose": "10 units insulin + 50 ml D25 IV over 30 min",
+        "why": "Shifts K+ intracellularly. Check BSL hourly."
+      },
+      {
+        "drug": "Nebulized Salbutamol",
+        "dose": "10 mg nebulized over 15 min",
+        "why": "Additional K+ shifting."
+      }
+    ],
+    "remove_k": [
+      {
+        "drug": "Kayexalate (Sodium Polystyrene Sulfonate)",
+        "brand": "Kalimate / K-Bind",
+        "dose": "15-30g oral or 30-50g rectal",
+        "why": "Removes K+ from body. Takes 1-2 hours."
+      }
+    ],
+    "ecg": "Get stat. Look for peaked T-waves, wide QRS, sine wave.",
+    "monitor": "Recheck K+ in 1 hour.",
+    "escalate": "Call senior if K+ not improving after 2 hours or ECG worsening."
+  }
+}

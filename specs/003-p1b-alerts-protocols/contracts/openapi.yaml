@@ -1,0 +1,409 @@
+openapi: "3.1.0"
+info:
+  title: Shift Buddy V2 — P1b Alert & Protocol API
+  version: "0.3.0"
+  description: Alert engine + deterministic clinical protocol endpoints (P1b)
+
+servers:
+  - url: /api/v1
+
+security:
+  - bearerAuth: []
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    ErrorResponse:
+      type: object
+      required: [error, message]
+      properties:
+        error:
+          type: string
+          example: alert_not_found
+        message:
+          type: string
+          example: "Alert not found"
+
+    Alert:
+      type: object
+      required:
+        - id
+        - patient_id
+        - alert_type
+        - trigger_source
+        - trigger_parameter
+        - trigger_value
+        - message
+        - acknowledged
+        - created_at
+      properties:
+        id:
+          type: string
+          format: uuid
+        patient_id:
+          type: string
+          format: uuid
+        alert_type:
+          type: string
+          enum: [critical, warning]
+        trigger_source:
+          type: string
+          enum: [vital, lab, protocol]
+        trigger_parameter:
+          type: string
+          example: "K+"
+        trigger_value:
+          type: number
+          example: 6.2
+        message:
+          type: string
+          example: "K+ 6.2 mEq/L — Critical hyperkalemia."
+        protocol_link:
+          type: string
+          nullable: true
+          example: "/api/v1/protocols/evaluate?protocol=hyperkalemia"
+        acknowledged:
+          type: boolean
+        acknowledged_by:
+          type: string
+          format: uuid
+          nullable: true
+        acknowledged_at:
+          type: string
+          format: date-time
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+
+    AlertListResponse:
+      type: object
+      required: [alerts, page, limit, total_pages]
+      properties:
+        alerts:
+          type: array
+          items:
+            $ref: "#/components/schemas/Alert"
+        page:
+          type: integer
+          minimum: 1
+        limit:
+          type: integer
+          minimum: 1
+          maximum: 100
+        total_pages:
+          type: integer
+
+    AcknowledgeResponse:
+      type: object
+      required: [acknowledged, acknowledged_by, acknowledged_at]
+      properties:
+        acknowledged:
+          type: boolean
+          example: true
+        acknowledged_by:
+          type: string
+          format: uuid
+        acknowledged_at:
+          type: string
+          format: date-time
+
+    ProtocolInfo:
+      type: object
+      required: [name, description]
+      properties:
+        name:
+          type: string
+          example: hyperkalemia
+        description:
+          type: string
+          example: "Hyperkalemia management (AHA 2023 / KDIGO 2023)"
+
+    ProtocolListResponse:
+      type: object
+      required: [protocols]
+      properties:
+        protocols:
+          type: array
+          items:
+            $ref: "#/components/schemas/ProtocolInfo"
+
+    Recommendation:
+      type: object
+      required: [action, priority, rationale, source]
+      properties:
+        action:
+          type: string
+          example: "IV Calcium Gluconate 10% 10ml over 10 minutes"
+        priority:
+          type: integer
+          minimum: 1
+          example: 1
+        rationale:
+          type: string
+          example: "Cardiac membrane stabilization — K+ > 6.0"
+        source:
+          type: string
+          minLength: 1
+          example: "AHA 2023 Hyperkalemia Guidelines"
+
+    ProtocolEvaluateRequest:
+      type: object
+      required: [protocol, patient_id, values]
+      properties:
+        protocol:
+          type: string
+          enum: [hyperkalemia, aki_staging, dka]
+        patient_id:
+          type: string
+          format: uuid
+        values:
+          type: object
+          description: >
+            Protocol-specific input values.
+            hyperkalemia: { potassium: float, ecg_changes?: bool }
+            aki_staging: { creatinine_current: float, recorded_at?: date-time }
+            dka: { blood_sugar: float, ph: float, hco3: float, mental_status: string }
+          additionalProperties: true
+
+    ProtocolEvaluateResponse:
+      type: object
+      required: [protocol, severity, recommendations, escalation, alert_generated]
+      properties:
+        protocol:
+          type: string
+          example: hyperkalemia
+        severity:
+          type: string
+          example: severe
+        recommendations:
+          type: array
+          items:
+            $ref: "#/components/schemas/Recommendation"
+        escalation:
+          type: string
+          nullable: true
+          example: null
+        alert_generated:
+          type: boolean
+          description: >
+            True iff severity warrants clinical action (not "insufficient_data").
+            Does not create a new Alert DB record — alert was already created
+            by the triggering lab submission.
+
+paths:
+  /patients/{patient_id}/alerts:
+    get:
+      summary: List alerts for a patient
+      operationId: listPatientAlerts
+      tags: [alerts]
+      parameters:
+        - name: patient_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: alert_type
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [critical, warning]
+        - name: acknowledged
+          in: query
+          required: false
+          schema:
+            type: boolean
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 1
+            minimum: 1
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 20
+            minimum: 1
+            maximum: 100
+      responses:
+        "200":
+          description: Paginated alert list (empty list when no alerts — never 404)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AlertListResponse"
+        "401":
+          description: Missing or invalid bearer token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Patient not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                error: patient_not_found
+                message: "Patient not found"
+
+  /alerts/{alert_id}/acknowledge:
+    post:
+      summary: Acknowledge an alert
+      operationId: acknowledgeAlert
+      tags: [alerts]
+      parameters:
+        - name: alert_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        "200":
+          description: Alert acknowledged
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AcknowledgeResponse"
+        "401":
+          description: Missing or invalid bearer token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Alert not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                error: alert_not_found
+                message: "Alert not found"
+        "409":
+          description: Alert already acknowledged
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                error: already_acknowledged
+                message: "Alert has already been acknowledged"
+
+  /protocols:
+    get:
+      summary: List available clinical protocols
+      operationId: listProtocols
+      tags: [protocols]
+      description: >
+        Returns the static list of supported protocols. No DB hit.
+        Works fully offline.
+      responses:
+        "200":
+          description: Protocol list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProtocolListResponse"
+        "401":
+          description: Missing or invalid bearer token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /protocols/evaluate:
+    post:
+      summary: Evaluate a clinical protocol
+      operationId: evaluateProtocol
+      tags: [protocols]
+      description: >
+        Runs a deterministic protocol evaluation. Works offline (no AI call).
+        Writes one shadow_events row per call (Principle XIII / XIV MEP hinge).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProtocolEvaluateRequest"
+            examples:
+              hyperkalemia:
+                summary: Hyperkalemia severe
+                value:
+                  protocol: hyperkalemia
+                  patient_id: "00000000-0000-0000-0000-000000000001"
+                  values:
+                    potassium: 6.2
+                    ecg_changes: false
+              aki_staging:
+                summary: AKI staging
+                value:
+                  protocol: aki_staging
+                  patient_id: "00000000-0000-0000-0000-000000000001"
+                  values:
+                    creatinine_current: 1.4
+              dka:
+                summary: DKA moderate
+                value:
+                  protocol: dka
+                  patient_id: "00000000-0000-0000-0000-000000000001"
+                  values:
+                    blood_sugar: 340
+                    ph: 7.22
+                    hco3: 12
+                    mental_status: alert
+      responses:
+        "200":
+          description: Protocol evaluation result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProtocolEvaluateResponse"
+        "400":
+          description: Unknown protocol or missing required value
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                unknown_protocol:
+                  value:
+                    error: protocol_not_found
+                    message: "Protocol 'sepsis' is not supported in P1b"
+                missing_value:
+                  value:
+                    error: missing_required_value
+                    message: "Field 'potassium' is required for hyperkalemia protocol"
+        "401":
+          description: Missing or invalid bearer token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Patient not found (AKI patient_id lookup)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                error: patient_not_found
+                message: "Patient not found"

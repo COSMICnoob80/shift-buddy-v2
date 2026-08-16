@@ -204,3 +204,21 @@ if creatinine >= 1.5:
 - **Vital chart** = Handwritten vital signs graph in patient folder
 - **FSL** = Full name of the teaching hospital ward/unit
 - **PMDC** = Pakistan Medical and Dental Council (licensing authority)
+
+
+## Principle XV: Delivery-First
+This app runs on an HO's Android phone in a hospital ward with NO
+WiFi. Mobile data only (metered). All core functions (patient entry,
+vitals, labs, protocols, alerts) work FULLY OFFLINE via expo-sqlite.
+Network is enhancement only (sync, cloud backup). Any feature that
+spinner-waits for network to do its core job is a bug.
+Data comes from paper files (camera photo + manual entry).
+Output goes to screen + WhatsApp share to senior group.
+
+## Principle XVI: Model Selection
+Runtime (shipped in APK):
+- Deterministic engines ONLY for dosing, thresholds, protocols.
+- MedGemma 1.5 4B on-device (P2+, advisory only, never primary).
+- Gemma 4 E2B on-device (P2+, OCR + voice).
+- NO cloud LLMs in clinical path. Ever.
+Dev tooling (not shipped): HERMES + DeepSeek V4 Flash via OpenRouter.
