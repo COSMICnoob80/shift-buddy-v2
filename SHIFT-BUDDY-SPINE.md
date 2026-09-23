@@ -9,11 +9,11 @@
 
 | Field | Value |
 |-------|-------|
-| Version | v0.5.0 |
-| APK artifact | Local build at `mobile/android/app/build/outputs/apk/release/app-release.apk` — **FRESH (Sep 23 2026, 108 MB); not yet published** |
-| Source last edited | Aug 16 2026 |
-| Last checkpoint | CP-003 |
-| Next checkpoint | CP-003 — install fresh APK, run device baseline test, publish GitHub Release |
+| Version | v0.5.0-alpha.1 (versionCode 2) |
+| APK artifact | **PUBLISHED** — [v0.5.0-alpha.1](https://github.com/COSMICnoob80/shift-buddy-v2/releases/tag/v0.5.0-alpha.1) (107 MB, debug-signed) · local copy at `mobile/android/app/build/outputs/apk/release/app-release.apk` |
+| Source last edited | Sep 23 2026 |
+| Last checkpoint | CP-004 |
+| Next checkpoint | CP-005 — device baseline test at SIH MICU; log findings in `mobile/test-results.md` |
 | Primary surface | `mobile/` (offline Android app) — web/PWA is deprecated as primary |
 | Deploy target | Civilian teaching hospitals (AFMS is a dead end — no external HMS integration) |
 
@@ -27,6 +27,26 @@
 ---
 
 ## Checkpoint Log
+
+### CP-004 — 2026-09-23 — First published release; CI pipeline repaired
+
+**Outcome:** `v0.5.0-alpha.1` published with an installable APK asset — the first downloadable build in the project's history.
+
+**Two CI failures found and fixed (both workflow-only; never affected the app):**
+
+1. `android-actions/setup-android@v3` requested the `tools` SDK package, which `sdkmanager` no longer provides → pinned explicit packages (`platform-tools`, `platforms;android-36`, `build-tools;36.0.0`, `ndk;27.1.12297006`) to match local Gradle resolution.
+2. That fix used a **comma-separated** package string, but the action splits on **whitespace** → `Failed to find package 'platform-tools,'`. Switched to space separation.
+
+**Verified, not assumed:**
+
+- CI run `35873900381` — all steps green (SDK setup → typecheck → 97 tests → Gradle release → artifact → Release).
+- Release asset: `app-release.apk`, 107 MB.
+- **Signature compatibility confirmed** — CI APK SHA-1 `5e8f16062ea3cd2c4a0d547876baa6f38cabf625` is byte-identical to the local keystore's cert, so release builds install *over* prior local builds without an uninstall (data preserved).
+- `versionCode` bumped 1 → 2 in `app.json` so the APK upgrades rather than conflicts with the Jun 19 install.
+
+**Why this matters:** the "APK must be downloadable from the repo, versioned per iteration" requirement is now automated — pushing any `v*` tag rebuilds and republishes. No local build dependency.
+
+**Not yet done:** the device baseline test (CP-005). Everything above is verified from source, CI logs, and APK metadata — none of it proves runtime behaviour on a real phone.
 
 ### CP-003 — 2026-09-23 — Build unblocked: root cause found, fresh APK produced
 

@@ -127,13 +127,15 @@ Full architecture, clinical safety rules, and domain vocabulary in [AGENTS.md](A
 
 ## 📲 Download
 
-| Version | APK | Status |
-|---------|-----|--------|
-| latest | [Download latest APK](https://github.com/COSMICnoob80/shift-buddy-v2/releases/latest) | First release pending |
+| Version | APK | Notes |
+|---------|-----|-------|
+| **v0.5.0-alpha.1** | [Download APK](https://github.com/COSMICnoob80/shift-buddy-v2/releases/download/v0.5.0-alpha.1/app-release.apk) | versionCode 2 · 107 MB |
+| latest | [Latest release](https://github.com/COSMICnoob80/shift-buddy-v2/releases/latest) | Always the newest tag |
 | older versions | [All releases](https://github.com/COSMICnoob80/shift-buddy-v2/releases) | Archived by tag after publication |
 
 > Install: enable **"Install from unknown sources"** on your Android device, then open the APK.
 > APKs ship via GitHub Releases (not committed to git — the build artifact exceeds GitHub's 100 MB file limit).
+> Builds are debug-signed; a production keystore is required before Play Store submission.
 
 ---
 
