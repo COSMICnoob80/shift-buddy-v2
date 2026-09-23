@@ -10,16 +10,20 @@ A stateful clinical decision support agent built for Pakistani house officers wh
 
 ## What Shift Buddy Does
 
-- 📋 **Intelligent Patient Intake** — Photo-scan paper treatment charts and vital sign sheets; structured data extracted via OCR
-- 🫀 **Vital Signs Monitoring** — Track HR, BP, SpO₂, GCS, temperature, urine output; detect AKI, sepsis, and respiratory decline automatically
-- 💊 **Medication Management** — Dose calculator with weight-based pediatrics, route/frequency validation, allergy cross-checks
-- ⚠️ **Clinical Alert Engine** — Real-time threshold breach detection using KDIGO, ATLS, AKU CPGs — pushes notifications, never sleeps
-- 🧠 **CPG-Guided Recommendations** — Protocol engine hardwired with AKI staging, hyperkalemia management, DKA protocols, antibiotic guidelines
-- 📝 **ADMO Note Generation** — Admission, Diagnosis, Management, Orders — auto-formatted from patient data
-- 🤝 **Handover Builder** — Structured shift-to-shift handovers shareable via WhatsApp to your senior group
-- 🌐 **Offline-First** — expo-sqlite stores everything locally. Works in wards with NO WiFi or mobile data. Syncs when connection returns
-- 🎙️ **Voice Input** — Whisper small.en for hands-free vital entry between patients
-- 🇵🇰 **Pakistan-Specific** — Military rank titles (Cpl/t, Hav, Lt Col), PMDC licensing, local formulary units, PSX-style acuity prioritization
+- 🫀 **Vital Signs Monitoring** — Track HR, BP, SpO₂, GCS, temperature, RR; flag critical values against configurable thresholds
+- 💊 **Medication Manager** — Per-patient medication list with route/frequency, drug formulary search, and renal-toxicity warnings
+- ⚠️ **Clinical Alert Engine** — Threshold breach detection using KDIGO / AKU CPG thresholds; alerts persist until acknowledged
+- 🧠 **CPG-Guided Recommendations** — 7 deterministic protocol engines: AKI staging, hyperkalemia, DKA, ACS, anaphylaxis, hypoglycaemia, respiratory
+- 🤝 **Handover Builder** — Structured patient summary shared to your senior group via WhatsApp
+- 🌐 **Offline-First** — expo-sqlite stores everything on-device. Works in wards with NO WiFi or mobile data
+- 🇵🇰 **Pakistan-Specific** — Military rank titles (Cpl/t, Hav, Lt Col), PMDC licensing, local drug formulary, acuity prioritisation
+
+## Planned (Not Yet Implemented)
+
+- 📋 **Chart OCR** — photo-capture of paper treatment/vital charts with structured extraction. *Currently the camera stores a photo only; no text is extracted*
+- 📝 **ADMO Note Generation** — auto-formatted Admission/Diagnosis/Management/Orders notes
+- 🎙️ **Voice Input** — hands-free vital entry
+- 🧩 **Scenario Correlation** — combined multi-parameter guidance (today each alert is evaluated independently)
 
 ## What Shift Buddy Does NOT Do
 
@@ -31,60 +35,68 @@ A stateful clinical decision support agent built for Pakistani house officers wh
 
 ---
 
-## Agent Architecture
+## Architecture (as implemented)
 
 ```
-┌─────────────────────────────────────────────────────────┐
-│                    HO Phone (Offline)                     │
-│                                                         │
-│  ┌──────────┐  ┌──────────┐  ┌──────────────────────┐   │
-│  │ Patient   │  │ Vital &  │  │ Protocol Engine      │   │
-│  │ Intake    │→ │ Lab Entry│→ │ (AKI / HyperK / DKA) │   │
-│  └──────────┘  └──────────┘  └──────────┬───────────┘   │
-│                                          │               │
-│  ┌──────────┐  ┌──────────┐  ┌──────────▼───────────┐   │
-│  │ ADMO     │← │ Alert    │← │ Shift State           │   │
-│  │ Generator│  │ Manager  │  │ (Redis-backed)        │   │
-│  └──────────┘  └──────────┘  └──────────────────────┘   │
-│                                                         │
-│  Inference: MedGemma 4B (advisory) · Gemma 4 E2B (OCR)  │
-│  Voice: Whisper small.en · Dosing: Deterministic ONLY    │
-└─────────────────────────────────────────────────────────┘
-           ↕ (sync when online)
-┌─────────────────────────────────────────────────────────┐
-│              Backend + Agent Orchestration                │
-│                                                         │
-│  FastAPI · LangGraph Graphs · PostgreSQL · ChromaDB(RAG) │
-│  OSS Models: Gemma 4 26B · MedGemma 1.5 · Whisper       │
-└─────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────┐
+│                    HO Phone (OFFLINE)                     │
+│                                                          │
+│  ┌──────────┐   ┌──────────┐   ┌──────────────────────┐  │
+│  │ Patient  │   │ Vitals & │   │ Critical Detection   │  │
+│  │ Entry    │→  │ Labs     │→  │ (is_critical.ts)     │  │
+│  └──────────┘   └──────────┘   └──────────┬───────────┘  │
+│                                            │              │
+│  ┌──────────┐   ┌──────────┐   ┌──────────▼───────────┐  │
+│  │ WhatsApp │←  │ Alerts   │←  │ Protocol Engines     │  │
+│  │ Handover │   │ (SQLite) │   │ (7 deterministic)    │  │
+│  └──────────┘   └──────────┘   └──────────────────────┘  │
+│                                                          │
+│  Storage: expo-sqlite (file-backed, non-destructive)     │
+│  Dosing:  DETERMINISTIC — no LLM decides a dose          │
+└──────────────────────────────────────────────────────────┘
+              ↕  (backend exists; sync not yet wired)
+
+Older surface, still in repo:  FastAPI backend (api/) · Next.js board (web/)
 ```
 
-### Model Routing
+## Target Architecture (roadmap — not yet built)
+
+```
+Backend + Agent Orchestration
+  FastAPI · LangGraph graphs · PostgreSQL · ChromaDB (RAG)
+  OSS models: Gemma 4 series · MedGemma 1.5 · Whisper
+
+On-device inference
+  MedGemma 1.5 4B (advisory, shadow-first) · Gemma 4 E2B (OCR)
+  Whisper small.en (voice) — all advisory only
+```
+
+### Model Routing (target — none of this is shipped yet)
 
 | Use Case | Model | Location |
 |---|---|---|
-| Primary reasoning | Gemma 4 26B A4B | Ollama (local server) |
-| On-device advisory | MedGemma 1.5 4B | Android AICore (P2+) |
-| OCR / multimodal | Gemma 4 E2B | LiteRT-LM (on-device) |
-| Voice capture | Whisper small.en | On-device |
-| Drug dosing | **DETERMINISTIC** | Local formulary + RxNorm |
+| On-device advisory | MedGemma 1.5 4B | Android AICore (planned) |
+| OCR / multimodal | Gemma 4 E2B | LiteRT-LM (planned) |
+| Voice capture | Whisper small.en | On-device (planned) |
+| Drug dosing | **DETERMINISTIC** | Local formulary — **shipped** |
 
-*No cloud LLMs reach clinical paths. Ever.*
+*Design rule: no cloud LLM ever reaches a clinical path.*
 
 ---
 
 ## Tech Stack
 
-| Layer | Technology |
-|---|---|
-| Mobile | React Native (Expo SDK 54) + expo-sqlite |
-| Web Board | Next.js 14 App Router + Tailwind CSS |
-| Backend | FastAPI (Python 3.12+, strict types) |
-| Agent Framework | LangGraph state machines |
-| Database | PostgreSQL (sync) · expo-sqlite (offline) |
-| Vector Store | ChromaDB (RAG for clinical guidelines) |
-| AI Models | OSS-only: Gemma 4 series, MedGemma, Whisper |
-| Infra | Docker Compose · GitHub Actions CI |
+| Component | Technology | Status |
+|---|---|---|
+| Mobile | React Native (Expo SDK 54) + expo-sqlite | ✅ Shipped |
+| Web Board | Next.js 14 App Router + Tailwind CSS | ✅ Shipped (secondary) |
+| Backend | FastAPI (Python 3.12+, strict types) | ✅ Shipped (sync not wired) |
+| Agent Framework | LangGraph state machines | 📋 Planned |
+| Database | expo-sqlite (offline-first) | ✅ Shipped |
+| Database (server) | PostgreSQL | ✅ Modeled, not yet in the mobile path |
+| Vector Store | ChromaDB (RAG for clinical guidelines) | 📋 Planned |
+| AI Models | OSS-only: Gemma 4 series, MedGemma, Whisper | 📋 Planned |
+| Infra | Docker Compose · GitHub Actions CI | ✅ Shipped |
 
 ---
 
@@ -113,6 +125,18 @@ Full architecture, clinical safety rules, and domain vocabulary in [AGENTS.md](A
 
 ---
 
+## 📲 Download
+
+| Version | APK | Status |
+|---------|-----|--------|
+| latest | [Download latest APK](https://github.com/COSMICnoob80/shift-buddy-v2/releases/latest) | First release pending |
+| older versions | [All releases](https://github.com/COSMICnoob80/shift-buddy-v2/releases) | Archived by tag after publication |
+
+> Install: enable **"Install from unknown sources"** on your Android device, then open the APK.
+> APKs ship via GitHub Releases (not committed to git — the build artifact exceeds GitHub's 100 MB file limit).
+
+---
+
 ## Project Status
 
 | Component | Status |
@@ -120,10 +144,12 @@ Full architecture, clinical safety rules, and domain vocabulary in [AGENTS.md](A
 | **Foundation (Phase 0)** | ✅ Complete — auth, JWT, CVE guards, PHI redaction, router allowlist |
 | **Patient Data Layer (Phase 1a)** | ✅ Complete — ORM models, migrations, schemas, services, routers |
 | **Protocol Engine (Phase 1b)** | ✅ Complete — AKI staging, hyperkalemia, DKA, alert thresholds |
-| **PWA Patient Board (Phase 1c)** | ✅ Complete — ward board, patient cards, vitals/labs tabs, alerts |
-| **Mobile Offline App** | ✅ Complete — vitals keypad, labs batch entry, medication manager, protocol vault |
-| **Agent Graphs** | 🔄 In-progress — patient intake, alert coordination, handover builder |
-| **Android APK Build** | Pending — eas-cli pipeline configured, awaiting showcase |
+| **PWA Patient Board (Phase 1c)** | ✅ Complete — superseded by the mobile app as primary surface |
+| **Mobile Offline App** | 🔄 Working — patient CRUD, vitals keypad, labs batch entry, medication manager, 7 protocol engines, alert pipeline, WhatsApp handover. See `SHIFT-BUDDY-SPINE.md` for verified state |
+| **Android APK Build** | 🔄 Release pipeline configured — APKs published to [Releases](../../releases) |
+| **OCR chart extraction** | ⚠️ Not implemented — the current screen stores a photo only; no text is extracted |
+| **Agent Graphs** | 📋 Not started — `agents/` is an empty scaffold |
+| **Scenario correlation** | 📋 Planned — combined multi-parameter guidance (currently alerts are independent) |
 
 ---
 

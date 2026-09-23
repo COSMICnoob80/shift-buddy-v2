@@ -18,7 +18,7 @@ CREATE TABLE IF NOT EXISTS patients (
   allergies TEXT,
   acuity TEXT NOT NULL DEFAULT 'stable',
   ward TEXT,
-  status TEXT NOT NULL DEFAULT 'admitted',
+  status TEXT NOT NULL DEFAULT 'active',
   last_photo_path TEXT,
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL

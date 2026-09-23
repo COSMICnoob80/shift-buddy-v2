@@ -47,8 +47,8 @@ describe('isLabCritical', () => {
     it('Hb < 7 → critical with transfusion message', () => {
       const result = isLabCritical('Hb', 6.5);
       expect(result).toBeTruthy();
-      expect(result!.message).toContain('Transfusion');
-      expect(result!.protocol).toBe('anemia');
+      expect(result!.instruction).toContain('Transfusion');
+      expect(result!.protocolLink).toBe('anemia');
     });
   });
 
@@ -56,8 +56,8 @@ describe('isLabCritical', () => {
     it('INR > 3 → critical with bleeding message', () => {
       const result = isLabCritical('INR', 3.5);
       expect(result).toBeTruthy();
-      expect(result!.message).toContain('bleeding');
-      expect(result!.protocol).toBe('coagulopathy');
+      expect(result!.instruction).toContain('bleeding');
+      expect(result!.protocolLink).toBe('coagulopathy');
     });
   });
 
@@ -65,8 +65,8 @@ describe('isLabCritical', () => {
     it('Lactate > 4 → critical with sepsis message', () => {
       const result = isLabCritical('Lactate', 5.0);
       expect(result).toBeTruthy();
-      expect(result!.message).toContain('Sepsis');
-      expect(result!.protocol).toBe('resuscitation');
+      expect(result!.instruction).toContain('Sepsis');
+      expect(result!.protocolLink).toBe('sepsis');
     });
   });
 });

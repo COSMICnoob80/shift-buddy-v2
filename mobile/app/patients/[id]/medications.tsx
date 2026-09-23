@@ -10,7 +10,7 @@ import {
   View,
   Modal,
 } from 'react-native';
-import { router, useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams } from 'expo-router';
 import { SQLiteDatabase } from 'expo-sqlite';
 import { getDb } from '../../../lib/db';
 import { searchDrugs, DrugRow, parseBrands } from '../../../lib/drugs';
@@ -109,14 +109,17 @@ export default function MedicationsScreen() {
     setSearchResults([]);
   }, []);
 
-  async function saveMedications(updated: Medication[]) {
-    if (!db || !id) return;
-    await db.runAsync(
-      'UPDATE patients SET current_medications = ?, updated_at = ? WHERE id = ?',
-      [JSON.stringify(updated), new Date().toISOString(), id],
-    );
-    setMedications(updated);
-  }
+  const saveMedications = useCallback(
+    async (updated: Medication[]) => {
+      if (!db || !id) return;
+      await db.runAsync(
+        'UPDATE patients SET current_medications = ?, updated_at = ? WHERE id = ?',
+        [JSON.stringify(updated), new Date().toISOString(), id],
+      );
+      setMedications(updated);
+    },
+    [db, id],
+  );
 
   const handleAddMed = useCallback(async () => {
     if (!selectedDrug && !searchQuery.trim()) { Alert.alert('Search and select a drug'); return; }
@@ -134,7 +137,7 @@ export default function MedicationsScreen() {
     await saveMedications(updated);
     setShowAdd(false);
     resetForm();
-  }, [selectedDrug, searchQuery, dose, route, frequency, startDate, notes, medications]);
+  }, [selectedDrug, searchQuery, dose, route, frequency, startDate, notes, medications, saveMedications]);
 
   function resetForm() {
     setSelectedDrug(null);

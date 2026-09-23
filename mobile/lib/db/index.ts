@@ -8,10 +8,15 @@ export async function getDb(): Promise<SQLiteDatabase> {
   if (_db !== null) return _db;
   if (_dbPromise !== null) return _dbPromise;
   _dbPromise = (async () => {
-    const db = await openDatabaseAsync('shift_buddy.db');
-    await runMigrations(db);
-    _db = db;
-    return db;
+    try {
+      const db = await openDatabaseAsync('shift_buddy.db');
+      await runMigrations(db);
+      _db = db;
+      return db;
+    } catch (error) {
+      _dbPromise = null;
+      throw error;
+    }
   })();
   return _dbPromise;
 }

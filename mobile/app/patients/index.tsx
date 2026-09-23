@@ -8,7 +8,7 @@ import {
   Text,
   View,
 } from 'react-native';
-import { router } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import { SQLiteDatabase } from 'expo-sqlite';
 import { getDb, dischargePatient } from '../../lib/db';
 import PatientCard, { Acuity } from '../../components/PatientCard';
@@ -74,9 +74,11 @@ export default function PatientListScreen() {
     setRefreshing(false);
   }, [db]);
 
-  useEffect(() => {
-    if (db) refresh();
-  }, [db, refresh]);
+  useFocusEffect(
+    useCallback(() => {
+      if (db) refresh();
+    }, [db, refresh]),
+  );
 
   if (!dbReady) {
     return (

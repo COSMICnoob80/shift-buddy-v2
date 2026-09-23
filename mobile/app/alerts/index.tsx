@@ -7,7 +7,7 @@ import {
   Text,
   View,
 } from 'react-native';
-import { router } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import { SQLiteDatabase } from 'expo-sqlite';
 import { getDb } from '../../lib/db';
 import AlertBanner from '../../components/AlertBanner';
@@ -59,9 +59,11 @@ export default function AlertsListScreen() {
     setRefreshing(false);
   }, [db]);
 
-  useEffect(() => {
-    if (db) refresh();
-  }, [db, refresh]);
+  useFocusEffect(
+    useCallback(() => {
+      if (db) refresh();
+    }, [db, refresh]),
+  );
 
   return (
     <View style={styles.container}>
